@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title></title>
+<style>
+body {
+  font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace
+}
+.offline {
+  color: green;
+}
+</style>
+<body>
+<h1>go <span id="offline">OFFLINE</span></h1>
+<p>Score: <span id="score">0</span></p>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker
+       .register('sw.js');
+  }
+
+  if ('onLine' in navigator) {
+    var offline = navigator.onLine === false;
+
+    if (offline) {
+      onOffline();
+    }
+
+    var score;
+    var scoreTick;
+
+    function onOffline() {
+      score = 0;	document.querySelector('#offline').classList.add('offline');
+      scoreTick = window.setInterval(function () {
+        if (!document.hidden) {
+          score++;
+          document.querySelector('#score').innerHTML = score;
+        }
+      }, 1000)
+    }
+
+    function onOnline() {
+    	document.querySelector('#offline').classList.remove('offline');
+      window.clearInterval(scoreTick);
+    }
+
+    window.addEventListener('offline', onOffline);
+    window.addEventListener('online', onOnline);
+  }
+</script>
+</body>
+</html>
