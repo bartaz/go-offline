@@ -4,14 +4,59 @@
 <title></title>
 <style>
 body {
-  font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace
+  font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
+  max-width: 500px;
+  margin: 100px auto;
 }
-.offline {
+
+.offline #offline {
   color: green;
 }
+
+.title {
+  font-size: 50px;
+}
+
+.i {
+  position: relative;
+}
+
+.wifi {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  margin-left: -25px;
+}
+
+/* https://codepen.io/GilSanchez/pen/rusAy */
+.wifi {
+	padding: 5px;
+}
+
+.wifi, .wifi:before {
+	display: block;
+	border: 15px double transparent;
+	border-top-color: currentColor;
+	border-radius: 50%;
+}
+
+.wifi::before {
+	content: '';
+	width: 0; height: 0;
+  border: 5px solid transparent;
+	border-top-color: currentColor;
+}
+
+.offline .wifi {
+  border-color: transparent;
+}
+
+
 </style>
 <body>
-<h1>go <span id="offline">OFFLINE</span></h1>
+<h1 class="title">
+  go <span id="offline">OFFL<span class="i">I<span class="wifi"></span></span>NE</span>
+</h1>
 <p>Score: <span id="score">0</span></p>
 
 <script>
@@ -31,7 +76,7 @@ body {
     var scoreTick;
 
     function onOffline() {
-      score = 0;	document.querySelector('#offline').classList.add('offline');
+      score = 0;	document.querySelector('.title').classList.add('offline');
       scoreTick = window.setInterval(function () {
         if (!document.hidden) {
           score++;
@@ -41,7 +86,7 @@ body {
     }
 
     function onOnline() {
-    	document.querySelector('#offline').classList.remove('offline');
+    	document.querySelector('.title').classList.remove('offline');
       window.clearInterval(scoreTick);
     }
 
