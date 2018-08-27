@@ -67,6 +67,23 @@ body {
   border-color: transparent;
 }
 
+.star {
+  opacity: 0;
+}
+
+.achievement {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.unlocked {
+  opacity: 1;
+  text-decoration: none;
+}
+
+.unlocked .star {
+  opacity: 1;
+}
 
 </style>
 <body>
@@ -79,6 +96,12 @@ body {
 </p>
 <p class="score">&nbsp;&nbsp;&nbsp;SCORE: <span id="js-score">0</span></p>
 
+<h2> ACHIEVEMENTS </h2>
+<p class="achievement" id="js-achievement-0"><span class="star">&#9733; </span>go offline</p>
+<p class="achievement" id="js-achievement-1"><span class="star">&#9733; </span>be offline</p>
+<p class="achievement" id="js-achievement-2"><span class="star">&#9733; </span>13 seconds to Mars</p>
+<p class="achievement" id="js-achievement-3"><span class="star">&#9733; </span>Lucky</p>
+
 <script>
 // TODO: enable offline service worker
 // if ('serviceWorker' in navigator) {
@@ -86,7 +109,7 @@ body {
 //      .register('sw.js');
 // }
 
-  var defaultGameData = { hiScore: 0 };
+  var defaultGameData = { hiScore: 0, achievements: [] };
 
   function readGameData() {
     if (localStorage) {
@@ -123,12 +146,26 @@ body {
 
   var data = readGameData();
 
+  function unlockAchievement(i) {
+    data.achievements[i] = true;
+    document.querySelector('#js-achievement-' + i).classList.add('unlocked');
+    saveGameData(data);
+  }
+
   document.querySelector('#js-hiscore').innerHTML = data.hiScore;
+
+  // init achievements
+  data.achievements.forEach(function (achievement, i) {
+    if (achievement) {
+      document.querySelector('#js-achievement-' + i).classList.add('unlocked');
+    }
+  });
 
   if ('onLine' in navigator) {
     var offline = navigator.onLine === false;
 
     if (offline) {
+      unlockAchievement(1);
       onOffline();
     }
 
@@ -136,6 +173,7 @@ body {
     var scoreTick;
 
     function onOffline() {
+      unlockAchievement(0);
       score = 0;
       document.querySelector('#js-score').innerHTML = score;
       document.body.classList.remove('hiscore');
@@ -144,12 +182,19 @@ body {
       scoreTick = window.setInterval(function () {
         if (!document.hidden) {
           score++;
+          if (score === 13) {
+            unlockAchievement(2);
+          }
           document.querySelector('#js-score').innerHTML = score;
         }
       }, 1000)
     }
 
     function onOnline() {
+      if (!~~(Math.random() * 13)) {
+        unlockAchievement(3)
+      }
+
     	document.body.classList.remove('offline');
       if (score > data.hiScore) {
         data.hiScore = score;
