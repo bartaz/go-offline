@@ -29,6 +29,14 @@ body {
   opacity: 1;
 }
 
+.share {
+  opacity: 0;
+}
+
+.hiscore .share {
+  opacity: 1;
+}
+
 .wifi {
   position: absolute;
   top: -25px;
@@ -65,7 +73,10 @@ body {
 <h1 class="title">
   go <span id="offline">OFFL<span class="i">I<span class="wifi"></span></span>NE</span>
 </h1>
-<p>HI SCORE: <span id="js-hiscore">0</span></p>
+<p>
+  HI SCORE: <span id="js-hiscore">0</span>
+  <span class="share">- <a href="https://twitter.com/" target="_blank" id="js-share">SHARE</a> YOUR NEW HI SCORE!</span>
+</p>
 <p class="score">&nbsp;&nbsp;&nbsp;SCORE: <span id="js-score">0</span></p>
 
 <script>
@@ -79,7 +90,7 @@ body {
 
   function readGameData() {
     if (localStorage) {
-      var gameData = defaultGameData;
+      var gameData;
 
       try {
         gameData = JSON.parse(localStorage.getItem('GO_OFFLINE_DATA'));
@@ -88,7 +99,7 @@ body {
       }
     }
 
-    return gameData;
+    return gameData || defaultGameData;
   }
 
   function saveGameData(data) {
@@ -101,8 +112,16 @@ body {
     }
   }
 
+  function getShareUrl(score) {
+    var url = "https://twitter.com/share?url=" +
+      window.location +
+      "&text=I've just spent " + score + " seconds offline in Go Offline game, and first thing I'm doing is sharing it..." +
+      "&hashtags=js13k"
+
+    return url;
+  }
+
   var data = readGameData();
-  console.log(data);
 
   document.querySelector('#js-hiscore').innerHTML = data.hiScore;
 
@@ -119,6 +138,7 @@ body {
     function onOffline() {
       score = 0;
       document.querySelector('#js-score').innerHTML = score;
+      document.body.classList.remove('hiscore');
       document.body.classList.add('offline');
 
       scoreTick = window.setInterval(function () {
@@ -133,7 +153,9 @@ body {
     	document.body.classList.remove('offline');
       if (score > data.hiScore) {
         data.hiScore = score;
-        document.querySelector('#js-hiscore').innerHTML = data.hiScore;
+        document.body.classList.add('hiscore');
+        document.querySelector('#js-hiscore').innerHTML = score;
+        document.querySelector('#js-share').href = getShareUrl(score);
         saveGameData(data);
       }
       window.clearInterval(scoreTick);
