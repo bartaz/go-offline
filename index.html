@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title></title>
+<title>go OFFLINE</title>
 <style>
 body {
   font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
@@ -19,6 +19,14 @@ body {
 
 .i {
   position: relative;
+}
+
+.score {
+  opacity: 0;
+}
+
+.offline .score {
+  opacity: 1;
 }
 
 .wifi {
@@ -57,13 +65,46 @@ body {
 <h1 class="title">
   go <span id="offline">OFFL<span class="i">I<span class="wifi"></span></span>NE</span>
 </h1>
-<p>Score: <span id="score">0</span></p>
+<p>HI SCORE: <span id="js-hiscore">0</span></p>
+<p class="score">&nbsp;&nbsp;&nbsp;SCORE: <span id="js-score">0</span></p>
 
 <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker
-       .register('sw.js');
+// TODO: enable offline service worker
+// if ('serviceWorker' in navigator) {
+//   navigator.serviceWorker
+//      .register('sw.js');
+// }
+
+  var defaultGameData = { hiScore: 0 };
+
+  function readGameData() {
+    if (localStorage) {
+      var gameData = defaultGameData;
+
+      try {
+        gameData = JSON.parse(localStorage.getItem('GO_OFFLINE_DATA'));
+      } catch(e) {
+        // ignore and return default
+      }
+    }
+
+    return gameData;
   }
+
+  function saveGameData(data) {
+    if (localStorage) {
+      try {
+        localStorage.setItem('GO_OFFLINE_DATA', JSON.stringify(data))
+      } catch (e) {
+        // silently ignore
+      }
+    }
+  }
+
+  var data = readGameData();
+  console.log(data);
+
+  document.querySelector('#js-hiscore').innerHTML = data.hiScore;
 
   if ('onLine' in navigator) {
     var offline = navigator.onLine === false;
@@ -76,17 +117,25 @@ body {
     var scoreTick;
 
     function onOffline() {
-      score = 0;	document.querySelector('.title').classList.add('offline');
+      score = 0;
+      document.querySelector('#js-score').innerHTML = score;
+      document.body.classList.add('offline');
+
       scoreTick = window.setInterval(function () {
         if (!document.hidden) {
           score++;
-          document.querySelector('#score').innerHTML = score;
+          document.querySelector('#js-score').innerHTML = score;
         }
       }, 1000)
     }
 
     function onOnline() {
-    	document.querySelector('.title').classList.remove('offline');
+    	document.body.classList.remove('offline');
+      if (score > data.hiScore) {
+        data.hiScore = score;
+        document.querySelector('#js-hiscore').innerHTML = data.hiScore;
+        saveGameData(data);
+      }
       window.clearInterval(scoreTick);
     }
 
