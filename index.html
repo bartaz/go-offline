@@ -96,11 +96,16 @@ body {
 </p>
 <p class="score">&nbsp;&nbsp;&nbsp;SCORE: <span id="js-score">0</span></p>
 
-<h2> ACHIEVEMENTS </h2>
+<h3> ACHIEVEMENTS </h3>
 <p class="achievement" id="js-achievement-0"><span class="star">&#9733; </span>go offline</p>
 <p class="achievement" id="js-achievement-1"><span class="star">&#9733; </span>be offline</p>
 <p class="achievement" id="js-achievement-2"><span class="star">&#9733; </span>13 seconds to Mars</p>
-<p class="achievement" id="js-achievement-3"><span class="star">&#9733; </span>Lucky</p>
+<p class="achievement" id="js-achievement-3"><span class="star">&#9733; </span>leet</p>
+<p class="achievement" id="js-achievement-4"><span class="star">&#9733; </span>get lucky</p>
+<p class="achievement" id="js-achievement-5"><span class="star">&#9733; </span>sharing is caring</p>
+<p class="achievement" id="js-achievement-6"><span class="star">&#9733; </span>distracted</p>
+<p class="achievement" id="js-achievement-7"><span class="star">&#9733; </span>cheater</p>
+<p class="achievement" id="js-achievement-8"><span class="star">&#9733; </span>tool up</p>
 
 <script>
 // TODO: enable offline service worker
@@ -110,6 +115,16 @@ body {
 // }
 
   var defaultGameData = { hiScore: 0, achievements: [] };
+
+  const ACHIEVEMENT_GO_OFFLINE = 0;
+  const ACHIEVEMENT_BE_OFFLINE = 1;
+  const ACHIEVEMENT_13_SECONDS = 2;
+  const ACHIEVEMENT_LEET       = 3;
+  const ACHIEVEMENT_GET_LUCKY =  4;
+  const ACHIEVEMENT_SHARING =    5;
+  const ACHIEVEMENT_DISTRACTED = 6;
+  const ACHIEVEMENT_CHEATER    = 7;
+  const ACHIEVEMENT_TOOL_UP    = 8;
 
   function readGameData() {
     if (localStorage) {
@@ -139,9 +154,21 @@ body {
     var url = "https://twitter.com/share?url=" +
       window.location +
       "&text=I've just spent " + score + " seconds offline in Go Offline game, and first thing I'm doing is sharing it..." +
-      "&hashtags=js13k"
+      "&hashtags=js13k,AchievementUnlocked"
 
     return url;
+  }
+
+  function devToolsOpen() {
+    // https://stackoverflow.com/questions/7798748/find-out-whether-chrome-console-is-open
+    var devtools = /./;
+
+    devtools.toString = function() {
+      this.opened = true;
+    }
+
+    console.log('%c', devtools);
+    return !!devtools.opened;
   }
 
   var data = readGameData();
@@ -161,11 +188,21 @@ body {
     }
   });
 
+  document.querySelector('#js-share').addEventListener('click', function() {
+    unlockAchievement(ACHIEVEMENT_SHARING);
+  });
+
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+      unlockAchievement(ACHIEVEMENT_DISTRACTED);
+    }
+  });
+
   if ('onLine' in navigator) {
     var offline = navigator.onLine === false;
 
     if (offline) {
-      unlockAchievement(1);
+      unlockAchievement(ACHIEVEMENT_BE_OFFLINE);
       onOffline();
     }
 
@@ -173,7 +210,12 @@ body {
     var scoreTick;
 
     function onOffline() {
-      unlockAchievement(0);
+      unlockAchievement(ACHIEVEMENT_GO_OFFLINE);
+
+      if (devToolsOpen()) {
+        unlockAchievement(ACHIEVEMENT_TOOL_UP);
+      }
+
       score = 0;
       document.querySelector('#js-score').innerHTML = score;
       document.body.classList.remove('hiscore');
@@ -181,10 +223,22 @@ body {
 
       scoreTick = window.setInterval(function () {
         if (!document.hidden) {
-          score++;
-          if (score === 13) {
-            unlockAchievement(2);
+          var domScore = +document.querySelector('#js-score').innerHTML;
+
+          if (score !== domScore) {
+            unlockAchievement(ACHIEVEMENT_CHEATER);
+            score = score < domScore ? score : domScore;
           }
+          score++;
+
+          if (score === 13) {
+            unlockAchievement(ACHIEVEMENT_13_SECONDS);
+          }
+
+          if (score === 1337) {
+            unlockAchievement(ACHIEVEMENT_LEET);
+          }
+
           document.querySelector('#js-score').innerHTML = score;
         }
       }, 1000)
@@ -192,7 +246,7 @@ body {
 
     function onOnline() {
       if (!~~(Math.random() * 13)) {
-        unlockAchievement(3)
+        unlockAchievement(ACHIEVEMENT_GET_LUCKY)
       }
 
     	document.body.classList.remove('offline');
