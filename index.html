@@ -106,6 +106,9 @@ body {
 <p class="achievement" id="js-achievement-6"><span class="star">&#9733; </span>distracted</p>
 <p class="achievement" id="js-achievement-7"><span class="star">&#9733; </span>cheater</p>
 <p class="achievement" id="js-achievement-8"><span class="star">&#9733; </span>tool up</p>
+<p class="achievement" id="js-achievement-9"><span class="star">&#9733; </span>hi</p>
+<p class="achievement" id="js-achievement-10"><span class="star">&#9733; </span>stayin' online</p>
+<p class="achievement" id="js-achievement-13"><span class="star">&#9733; </span>13:13:13</p>
 
 <script>
 // TODO: enable offline service worker
@@ -125,6 +128,9 @@ body {
   const ACHIEVEMENT_DISTRACTED = 6;
   const ACHIEVEMENT_CHEATER    = 7;
   const ACHIEVEMENT_TOOL_UP    = 8;
+  const ACHIEVEMENT_HI_SCORE   = 9;
+  const ACHIEVEMENT_ONLINE     = 10;
+  const ACHIEVEMENT_13_13_13   = 13;
 
   function readGameData() {
     if (localStorage) {
@@ -193,15 +199,27 @@ body {
   });
 
   document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) {
+    if (!document.hidden && !navigator.onLine) {
       unlockAchievement(ACHIEVEMENT_DISTRACTED);
     }
   });
 
   if ('onLine' in navigator) {
-    var offline = navigator.onLine === false;
 
-    if (offline) {
+    var onlineTime = 0;
+    var onlineTick = setInterval(function () {
+      if (!document.hidden && navigator.onLine) {
+        onlineTime++;
+        if (data.hiScore > 0 && onlineTime >= data.hiScore) {
+          unlockAchievement(ACHIEVEMENT_ONLINE);
+          clearInterval(onlineTick);
+        }
+      } else {
+        onlineTime = 0;
+      }
+    }, 1000);
+
+    if (!navigator.onLine) {
       unlockAchievement(ACHIEVEMENT_BE_OFFLINE);
       onOffline();
     }
@@ -239,6 +257,11 @@ body {
             unlockAchievement(ACHIEVEMENT_LEET);
           }
 
+          var date = new Date();
+          if (date.getHours() === 13 && date.getMinutes() === 13 && date.getSeconds() === 13) {
+            unlockAchievement(ACHIEVEMENT_13_13_13);
+          }
+
           document.querySelector('#js-score').innerHTML = score;
         }
       }, 1000)
@@ -251,6 +274,10 @@ body {
 
     	document.body.classList.remove('offline');
       if (score > data.hiScore) {
+        if (data.hiScore > 0) {
+          unlockAchievement(ACHIEVEMENT_HI_SCORE);
+        }
+
         data.hiScore = score;
         document.body.classList.add('hiscore');
         document.querySelector('#js-hiscore').innerHTML = score;
