@@ -137,109 +137,116 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 </script>
 
 <script>
-
 // TODO: enable offline service worker
 // if ('serviceWorker' in navigator) {
 //   navigator.serviceWorker
 //      .register('sw.js');
 // }
 
-  var defaultGameData = { hiScore: 0, achievements: [] };
+  function game() {
+    const ACHIEVEMENT_GO_OFFLINE = 0;
+    const ACHIEVEMENT_BE_OFFLINE = 1;
+    const ACHIEVEMENT_13_SECONDS = 2;
+    const ACHIEVEMENT_LEET       = 3;
+    const ACHIEVEMENT_GET_LUCKY  = 4;
+    const ACHIEVEMENT_SHARING    = 5;
+    const ACHIEVEMENT_DISTRACTED = 6;
+    const ACHIEVEMENT_CHEATER    = 7;
+    const ACHIEVEMENT_TOOL_UP    = 8;
+    const ACHIEVEMENT_HI_SCORE   = 9;
+    const ACHIEVEMENT_ONLINE     = 10;
+    const ACHIEVEMENT_13_13_13   = 13;
 
-  const ACHIEVEMENT_GO_OFFLINE = 0;
-  const ACHIEVEMENT_BE_OFFLINE = 1;
-  const ACHIEVEMENT_13_SECONDS = 2;
-  const ACHIEVEMENT_LEET       = 3;
-  const ACHIEVEMENT_GET_LUCKY =  4;
-  const ACHIEVEMENT_SHARING =    5;
-  const ACHIEVEMENT_DISTRACTED = 6;
-  const ACHIEVEMENT_CHEATER    = 7;
-  const ACHIEVEMENT_TOOL_UP    = 8;
-  const ACHIEVEMENT_HI_SCORE   = 9;
-  const ACHIEVEMENT_ONLINE     = 10;
-  const ACHIEVEMENT_13_13_13   = 13;
+    const bodyEl = document.body;
+    const scoreEl = document.querySelector('#js-score');
 
-  function readGameData() {
-    if (localStorage) {
-      var gameData;
+    function readGameData() {
+      if (localStorage) {
+        var gameData;
 
-      try {
-        gameData = JSON.parse(localStorage.getItem('GO_OFFLINE_DATA'));
-      } catch(e) {
-        // ignore and return default
+        try {
+          gameData = JSON.parse(localStorage.getItem('GO_OFFLINE_DATA'));
+        } catch(e) {
+          // ignore and return default
+        }
+      }
+
+      return gameData || { hiScore: 0, achievements: [] };
+    }
+
+    function saveGameData(data) {
+      if (localStorage) {
+        try {
+          localStorage.setItem('GO_OFFLINE_DATA', JSON.stringify(data))
+        } catch (e) {
+          // silently ignore
+        }
       }
     }
 
-    return gameData || defaultGameData;
-  }
+    function getShareUrl(score) {
+      var url = "https://twitter.com/share?url=" +
+        window.location +
+        "&text=I've just spent " + score + " seconds offline in Go Offline game, and first thing I'm doing is sharing it..." +
+        "&hashtags=js13k,AchievementUnlocked"
 
-  function saveGameData(data) {
-    if (localStorage) {
-      try {
-        localStorage.setItem('GO_OFFLINE_DATA', JSON.stringify(data))
-      } catch (e) {
-        // silently ignore
-      }
+      return url;
     }
-  }
 
-  function getShareUrl(score) {
-    var url = "https://twitter.com/share?url=" +
-      window.location +
-      "&text=I've just spent " + score + " seconds offline in Go Offline game, and first thing I'm doing is sharing it..." +
-      "&hashtags=js13k,AchievementUnlocked"
-
-    return url;
-  }
-
-  function devToolsOpen() {
+    // checking if devtools are open, via
     // https://stackoverflow.com/questions/7798748/find-out-whether-chrome-console-is-open
-    var devtools = /./;
+    function devToolsOpen() {
+      var devtools = /./;
 
-    devtools.toString = function() {
-      this.opened = true;
+      devtools.toString = function() {
+        this.opened = true;
+      }
+
+      console.log('%c', devtools);
+      return !!devtools.opened;
     }
 
-    console.log('%c', devtools);
-    return !!devtools.opened;
-  }
+    var data = readGameData();
 
-  var data = readGameData();
+    document.querySelector('#js-hiscore').innerHTML = data.hiScore;
 
-  function unlockAchievement(i) {
-    if (!data.achievements[i]) {
-      var soundURL = jsfxr([1,,0.0373,,0.2005,0.3599,,0.3733,,,,,,,,0.629,,,1,,,,,0.5]);
-      var player = new Audio();
-      player.src = soundURL;
-      player.play();
+    // INIT ACHIEVEMENTS
+    // ===================
 
-      data.achievements[i] = true;
-      document.querySelector('#js-achievement-' + i).classList.add('unlocked');
-      saveGameData(data);
+    // show unlocked achievements
+    data.achievements.forEach(function (achievement, i) {
+      if (achievement) {
+        document.querySelector('#js-achievement-' + i).classList.add('unlocked');
+      }
+    });
+
+    // helper for unlocking achievements
+    function unlockAchievement(i) {
+      if (!data.achievements[i]) {
+        var soundURL = jsfxr([1,,0.0373,,0.2005,0.3599,,0.3733,,,,,,,,0.629,,,1,,,,,0.5]);
+        var player = new Audio();
+        player.src = soundURL;
+        player.play();
+
+        data.achievements[i] = true;
+        document.querySelector('#js-achievement-' + i).classList.add('unlocked');
+        saveGameData(data);
+      }
     }
-  }
 
-  document.querySelector('#js-hiscore').innerHTML = data.hiScore;
+    // sharing is caring...
+    document.querySelector('#js-share').addEventListener('click', function() {
+      unlockAchievement(ACHIEVEMENT_SHARING);
+    });
 
-  // init achievements
-  data.achievements.forEach(function (achievement, i) {
-    if (achievement) {
-      document.querySelector('#js-achievement-' + i).classList.add('unlocked');
-    }
-  });
+    // distraced...
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden && !navigator.onLine) {
+        unlockAchievement(ACHIEVEMENT_DISTRACTED);
+      }
+    });
 
-  document.querySelector('#js-share').addEventListener('click', function() {
-    unlockAchievement(ACHIEVEMENT_SHARING);
-  });
-
-  document.addEventListener('visibilitychange', function() {
-    if (!document.hidden && !navigator.onLine) {
-      unlockAchievement(ACHIEVEMENT_DISTRACTED);
-    }
-  });
-
-  if ('onLine' in navigator) {
-
+    // stayin' online
     var onlineTime = 0;
     var onlineTick = setInterval(function () {
       if (!document.hidden && navigator.onLine) {
@@ -253,76 +260,103 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       }
     }, 1000);
 
+    // if game loads in offline mode unlock achievement and start it
     if (!navigator.onLine) {
+      // be offline...
       unlockAchievement(ACHIEVEMENT_BE_OFFLINE);
-      onOffline();
+      goOffline();
     }
 
-    var score;
-    var scoreTick;
+    var scoreTick; // interval for counting the score
 
-    function onOffline() {
+    // game on!
+    function goOffline() {
+      // go offline...
       unlockAchievement(ACHIEVEMENT_GO_OFFLINE);
 
+      // tool up...
       if (devToolsOpen()) {
         unlockAchievement(ACHIEVEMENT_TOOL_UP);
       }
 
-      score = 0;
-      document.querySelector('#js-score').innerHTML = score;
-      document.body.classList.remove('hiscore');
-      document.body.classList.add('offline');
+      score = 0; // ooops, very tempting leaked global variable...
+
+      scoreEl.innerHTML = score;
+      bodyEl.classList.remove('hiscore');
+      bodyEl.classList.add('offline');
 
       scoreTick = window.setInterval(function () {
         if (!document.hidden) {
-          var domScore = +document.querySelector('#js-score').innerHTML;
+          var domScore = +scoreEl.innerHTML;
 
+          // cheater...
+          // but I understand, this leaked global var is too tempting ;)
           if (score !== domScore) {
-            unlockAchievement(ACHIEVEMENT_CHEATER);
-            score = score < domScore ? score : domScore;
-          }
-          score++;
+            // this safeguard for score works, but is pretty weak.
+            // can you figure out how to beat it and have any score you want?
+            // no achievement for that, but if you make it, congratulations :)
 
+            unlockAchievement(ACHIEVEMENT_CHEATER);
+            score = 0; // no score for cheating, but you have the achievement ;)
+          }
+
+          score++;
+          scoreEl.innerHTML = score;
+
+          // 13 seconds to Mars...
           if (score === 13) {
             unlockAchievement(ACHIEVEMENT_13_SECONDS);
           }
 
+          // LEET...
           if (score === 1337) {
             unlockAchievement(ACHIEVEMENT_LEET);
           }
 
+          // 13:13:13...
           var date = new Date();
           if (date.getHours() === 13 && date.getMinutes() === 13 && date.getSeconds() === 13) {
             unlockAchievement(ACHIEVEMENT_13_13_13);
           }
-
-          document.querySelector('#js-score').innerHTML = score;
         }
       }, 1000)
     }
 
-    function onOnline() {
+    // game over :(
+    function goOnline() {
+      // lucky...
       if (!~~(Math.random() * 13)) {
         unlockAchievement(ACHIEVEMENT_GET_LUCKY)
       }
 
-    	document.body.classList.remove('offline');
+    	bodyEl.classList.remove('offline');
+
+      // deal with hi score
       if (score > data.hiScore) {
+        // hi...
         if (data.hiScore > 0) {
           unlockAchievement(ACHIEVEMENT_HI_SCORE);
         }
 
         data.hiScore = score;
-        document.body.classList.add('hiscore');
+        // show new hi score (and sharing link)
         document.querySelector('#js-hiscore').innerHTML = score;
         document.querySelector('#js-share').href = getShareUrl(score);
+        bodyEl.classList.add('hiscore');
+
         saveGameData(data);
       }
       window.clearInterval(scoreTick);
     }
 
-    window.addEventListener('offline', onOffline);
-    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+  }
+
+  // no point in setting up the game if browser doesn't support offline/online events
+  // sorry...
+  if ('onLine' in navigator) {
+    game();
   }
 </script>
 </body>
