@@ -7,7 +7,8 @@
 body {
   font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
   max-width: 500px;
-  margin: 100px auto;
+  margin: 50px auto;
+  padding: 20px;
 }
 
 .offline #offline {
@@ -32,6 +33,7 @@ body {
 
 .share {
   opacity: 0;
+  white-space: nowrap;
 }
 
 .hiscore .share {
@@ -228,8 +230,12 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
         player.src = soundURL;
         player.play();
 
+        // sound may not play on mobile without user intent, so let's try to vibrate instead
+        window.navigator.vibrate(200)
+
         data.achievements[i] = true;
         document.querySelector('#js-achievement-' + i).classList.add('unlocked');
+        document.querySelector('#js-achievement-' + i).scrollIntoView();
         saveGameData(data);
       }
     }
