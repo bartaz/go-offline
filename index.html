@@ -1,11 +1,11 @@
 <!doctype html>
 <html>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>go OFFLINE</title>
 <style>
 body {
-  font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
+  font-family: Consolas, "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", Monaco, "Courier New", Courier, monospace;
   max-width: 500px;
   margin: 50px auto;
   padding: 20px;
@@ -15,44 +15,29 @@ a {
   color: dodgerblue;
 }
 
-.offline #offline {
-  color: yellowgreen;
+/* TITLE / LOGO */
+h1 {
+  font-size: 50px;
 }
 
-.title {
-  font-size: 50px;
+.offline .title {
+  color: yellowgreen;
 }
 
 .i {
   position: relative;
 }
 
-.score {
-  opacity: 0;
-}
-
-.offline .score {
-  opacity: 1;
-}
-
-.share {
-  opacity: 0;
-  white-space: nowrap;
-}
-
-.hiscore .share {
-  opacity: 1;
-}
-
+/*
+  CSS wifi icon based on
+  https://codepen.io/GilSanchez/pen/rusAy
+*/
 .wifi {
   position: absolute;
   top: -25px;
   left: 50%;
   margin-left: -25px;
-}
 
-/* https://codepen.io/GilSanchez/pen/rusAy */
-.wifi {
 	padding: 5px;
 }
 
@@ -74,39 +59,53 @@ a {
   border-color: transparent;
 }
 
-.star {
-  transition: opacity 500ms;
+/* SCORE AND HI SCORE */
+.score {
   opacity: 0;
 }
 
+.offline .score {
+  opacity: 1;
+}
+
+.share {
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.hiscore .share {
+  opacity: 1;
+}
+
+/* ACHIEVEMENTS */
 .achievement {
   transition: opacity 500ms;
   opacity: 0.5;
   text-decoration: line-through;
 }
 
-.unlocked {
+.unlocked.achievement {
   opacity: 1;
   text-decoration: none;
 }
 
+.new.achievement::after {
+  content: ' - NEW!';
+  color: yellowgreen;
+}
+
 .star {
-  display: inline-block;
-  margin-right: 0.5em;
+  transition: opacity 500ms;
+  opacity: 0;
 }
 
 .unlocked .star {
   opacity: 1;
 }
-
-.new::after {
-  content: ' - NEW!';
-  color: yellowgreen;
-}
 </style>
 <body>
-<h1 class="title">
-  go <span id="offline">OFFL<span class="i">I<span class="wifi"></span></span>NE</span>
+<h1>
+  go <span class="title">OFFL<span class="i">I<i class="wifi"></i></span>NE</span>
 </h1>
 <p>
   HI SCORE: <span id="js-hiscore">0</span>
