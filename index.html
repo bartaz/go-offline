@@ -11,8 +11,12 @@ body {
   padding: 20px;
 }
 
+a {
+  color: dodgerblue;
+}
+
 .offline #offline {
-  color: green;
+  color: yellowgreen;
 }
 
 .title {
@@ -86,10 +90,19 @@ body {
   text-decoration: none;
 }
 
+.star {
+  display: inline-block;
+  margin-right: 0.5em;
+}
+
 .unlocked .star {
   opacity: 1;
 }
 
+.new::after {
+  content: ' - NEW!';
+  color: yellowgreen;
+}
 </style>
 <body>
 <h1 class="title">
@@ -101,19 +114,20 @@ body {
 </p>
 <p class="score">&nbsp;&nbsp;&nbsp;SCORE: <span id="js-score">0</span></p>
 
-<h3> ACHIEVEMENTS </h3>
-<p class="achievement" id="js-achievement-0"><span class="star">&#9733; </span>go offline</p>
-<p class="achievement" id="js-achievement-1"><span class="star">&#9733; </span>be offline</p>
-<p class="achievement" id="js-achievement-2"><span class="star">&#9733; </span>13 seconds to Mars</p>
-<p class="achievement" id="js-achievement-3"><span class="star">&#9733; </span>leet</p>
-<p class="achievement" id="js-achievement-4"><span class="star">&#9733; </span>get lucky</p>
-<p class="achievement" id="js-achievement-5"><span class="star">&#9733; </span>sharing is caring</p>
-<p class="achievement" id="js-achievement-6"><span class="star">&#9733; </span>distracted</p>
-<p class="achievement" id="js-achievement-7"><span class="star">&#9733; </span>cheater</p>
-<p class="achievement" id="js-achievement-8"><span class="star">&#9733; </span>tool up</p>
-<p class="achievement" id="js-achievement-9"><span class="star">&#9733; </span>hi</p>
-<p class="achievement" id="js-achievement-10"><span class="star">&#9733; </span>stayin' online</p>
-<p class="achievement" id="js-achievement-13"><span class="star">&#9733; </span>13:13:13</p>
+<h3>ACHIEVEMENTS</h3>
+<p class="achievement" id="js-achievement-go-offline"><span class="star">&#9733; </span>go offline</p>
+<p class="achievement" id="js-achievement-be-offline"><span class="star">&#9733; </span>be offline</p>
+<p class="achievement" id="js-achievement-13-seconds"><span class="star">&#9733; </span>13 seconds to Mars</p>
+<p class="achievement" id="js-achievement-leet"      ><span class="star">&#9733; </span>leet</p>
+<p class="achievement" id="js-achievement-lucky"     ><span class="star">&#9733; </span>get lucky</p>
+<p class="achievement" id="js-achievement-online"    ><span class="star">&#9733; </span>stayin' online</p>
+<p class="achievement" id="js-achievement-hi"        ><span class="star">&#9733; </span>hi!</p>
+<p class="achievement" id="js-achievement-sharing"   ><span class="star">&#9733; </span>sharing is caring</p>
+<p class="achievement" id="js-achievement-distracted"><span class="star">&#9733; </span>distracted</p>
+<p class="achievement" id="js-achievement-tool-up"   ><span class="star">&#9733; </span>tool up</p>
+<p class="achievement" id="js-achievement-cheater"   ><span class="star">&#9733; </span>cheater</p>
+<p class="achievement" id="js-achievement-click"     ><span class="star">&#9733; </span>click me</p>
+<p class="achievement" id="js-achievement-13-13-13"  ><span class="star">&#9733; </span>13:13:13</p>
 
 <script>
 /**
@@ -146,19 +160,6 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 // }
 
   function game() {
-    const ACHIEVEMENT_GO_OFFLINE = 0;
-    const ACHIEVEMENT_BE_OFFLINE = 1;
-    const ACHIEVEMENT_13_SECONDS = 2;
-    const ACHIEVEMENT_LEET       = 3;
-    const ACHIEVEMENT_GET_LUCKY  = 4;
-    const ACHIEVEMENT_SHARING    = 5;
-    const ACHIEVEMENT_DISTRACTED = 6;
-    const ACHIEVEMENT_CHEATER    = 7;
-    const ACHIEVEMENT_TOOL_UP    = 8;
-    const ACHIEVEMENT_HI_SCORE   = 9;
-    const ACHIEVEMENT_ONLINE     = 10;
-    const ACHIEVEMENT_13_13_13   = 13;
-
     const bodyEl = document.body;
     const scoreEl = document.querySelector('#js-score');
 
@@ -173,7 +174,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
         }
       }
 
-      return gameData || { hiScore: 0, achievements: [] };
+      return gameData || { hiScore: 0, achievements: {} };
     }
 
     function saveGameData(data) {
@@ -216,39 +217,41 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
     // ===================
 
     // show unlocked achievements
-    data.achievements.forEach(function (achievement, i) {
-      if (achievement) {
-        document.querySelector('#js-achievement-' + i).classList.add('unlocked');
+    Object.keys(data.achievements).forEach(function (key) {
+      if (data.achievements[key]) {
+        document.querySelector('#js-achievement-' + key).classList.add('unlocked');
       }
     });
 
     // helper for unlocking achievements
-    function unlockAchievement(i) {
-      if (!data.achievements[i]) {
+    function unlockAchievement(key) {
+      if (!data.achievements[key]) {
         var soundURL = jsfxr([1,,0.0373,,0.2005,0.3599,,0.3733,,,,,,,,0.629,,,1,,,,,0.5]);
         var player = new Audio();
         player.src = soundURL;
         player.play();
 
         // sound may not play on mobile without user intent, so let's try to vibrate instead
-        window.navigator.vibrate(200)
+        if ('ontouchstart' in document) {
+          window.navigator.vibrate(200)
+        }
 
-        data.achievements[i] = true;
-        document.querySelector('#js-achievement-' + i).classList.add('unlocked');
-        document.querySelector('#js-achievement-' + i).scrollIntoView();
+        data.achievements[key] = true;
+        document.querySelector('#js-achievement-' + key).classList.add('unlocked', 'new');
+        document.querySelector('#js-achievement-' + key).scrollIntoView();
         saveGameData(data);
       }
     }
 
     // sharing is caring...
     document.querySelector('#js-share').addEventListener('click', function() {
-      unlockAchievement(ACHIEVEMENT_SHARING);
+      unlockAchievement('sharing');
     });
 
     // distraced...
     document.addEventListener('visibilitychange', function() {
       if (!document.hidden && !navigator.onLine) {
-        unlockAchievement(ACHIEVEMENT_DISTRACTED);
+        unlockAchievement('distracted');
       }
     });
 
@@ -257,8 +260,8 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
     var onlineTick = setInterval(function () {
       if (!document.hidden && navigator.onLine) {
         onlineTime++;
-        if (data.hiScore > 0 && onlineTime >= data.hiScore) {
-          unlockAchievement(ACHIEVEMENT_ONLINE);
+        if (onlineTime > 42) {
+          unlockAchievement('online');
           clearInterval(onlineTick);
         }
       } else {
@@ -266,30 +269,39 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       }
     }, 1000);
 
+    document.querySelector('#js-achievement-click').addEventListener('click', function(){
+      unlockAchievement('click');
+    });
+
     // if game loads in offline mode unlock achievement and start it
     if (!navigator.onLine) {
-      // be offline...
-      unlockAchievement(ACHIEVEMENT_BE_OFFLINE);
       goOffline();
+
+      // be offline...
+      unlockAchievement('be-offline');
     }
 
     var scoreTick; // interval for counting the score
 
     // game on!
     function goOffline() {
-      // go offline...
-      unlockAchievement(ACHIEVEMENT_GO_OFFLINE);
-
-      // tool up...
-      if (devToolsOpen()) {
-        unlockAchievement(ACHIEVEMENT_TOOL_UP);
-      }
-
-      score = 0; // ooops, very tempting leaked global variable...
+      score = 0; // OOOPS, very tempting leaked global variable...
 
       scoreEl.innerHTML = score;
       bodyEl.classList.remove('hiscore');
+      [].slice.call(document.querySelectorAll('.new')).forEach(function(el) {
+        el.classList.remove('new');
+      });
       bodyEl.classList.add('offline');
+
+
+      // tool up...
+      if (devToolsOpen()) {
+        unlockAchievement('tool-up');
+      } else {
+        // go offline...
+        unlockAchievement('go-offline');
+      }
 
       scoreTick = window.setInterval(function () {
         if (!document.hidden) {
@@ -302,7 +314,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
             // can you figure out how to beat it and have any score you want?
             // no achievement for that, but if you make it, congratulations :)
 
-            unlockAchievement(ACHIEVEMENT_CHEATER);
+            unlockAchievement('cheater');
             score = 0; // no score for cheating, but you have the achievement ;)
           }
 
@@ -311,18 +323,18 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
           // 13 seconds to Mars...
           if (score === 13) {
-            unlockAchievement(ACHIEVEMENT_13_SECONDS);
+            unlockAchievement('13-seconds');
           }
 
           // LEET...
           if (score === 1337) {
-            unlockAchievement(ACHIEVEMENT_LEET);
+            unlockAchievement('leet');
           }
 
           // 13:13:13...
           var date = new Date();
           if (date.getHours() === 13 && date.getMinutes() === 13 && date.getSeconds() === 13) {
-            unlockAchievement(ACHIEVEMENT_13_13_13);
+            unlockAchievement('13-13-13');
           }
         }
       }, 1000)
@@ -330,18 +342,18 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
     // game over :(
     function goOnline() {
-      // lucky...
+      // get lucky...
       if (!~~(Math.random() * 13)) {
-        unlockAchievement(ACHIEVEMENT_GET_LUCKY)
+        unlockAchievement('lucky')
       }
 
     	bodyEl.classList.remove('offline');
 
-      // deal with hi score
+      // dealing with hi score
       if (score > data.hiScore) {
-        // hi...
+        // hi!...
         if (data.hiScore > 0) {
-          unlockAchievement(ACHIEVEMENT_HI_SCORE);
+          unlockAchievement('hi');
         }
 
         data.hiScore = score;
