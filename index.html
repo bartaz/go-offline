@@ -116,7 +116,7 @@ a {
 
 <h3>ACHIEVEMENTS</h3>
 <p class="achievement" id="js-achievement-go-offline"><span class="star">&#9733; </span>go offline</p>
-<p class="achievement" id="js-achievement-be-offline"><span class="star">&#9733; </span>be offline</p>
+<p class="achievement" id="js-achievement-first"     ><span class="star">&#9733; </span>offline first</p>
 <p class="achievement" id="js-achievement-13-seconds"><span class="star">&#9733; </span>13 seconds to Mars</p>
 <p class="achievement" id="js-achievement-leet"      ><span class="star">&#9733; </span>leet</p>
 <p class="achievement" id="js-achievement-lucky"     ><span class="star">&#9733; </span>get lucky</p>
@@ -153,11 +153,9 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 </script>
 
 <script>
-// TODO: enable offline service worker
-// if ('serviceWorker' in navigator) {
-//   navigator.serviceWorker
-//      .register('sw.js');
-// }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
 
   function game() {
     const bodyEl = document.body;
@@ -273,12 +271,11 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       unlockAchievement('click');
     });
 
-    // if game loads in offline mode unlock achievement and start it
+    // if game loads in offline mode start it automatically
+    var offlineFirst = false;
     if (!navigator.onLine) {
+      offlineFirst = true;
       goOffline();
-
-      // be offline...
-      unlockAchievement('be-offline');
     }
 
     var scoreTick; // interval for counting the score
@@ -294,14 +291,18 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       });
       bodyEl.classList.add('offline');
 
+      // offline first...
+      if (offlineFirst) {
+        unlockAchievement('first');
+      }
 
       // tool up...
       if (devToolsOpen()) {
         unlockAchievement('tool-up');
-      } else {
-        // go offline...
-        unlockAchievement('go-offline');
       }
+
+      // go offline...
+      unlockAchievement('go-offline');
 
       scoreTick = window.setInterval(function () {
         if (!document.hidden) {
