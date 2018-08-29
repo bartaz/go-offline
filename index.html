@@ -194,19 +194,6 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       return url;
     }
 
-    // checking if devtools are open, via
-    // https://stackoverflow.com/questions/7798748/find-out-whether-chrome-console-is-open
-    function devToolsOpen() {
-      var devtools = /./;
-
-      devtools.toString = function() {
-        this.opened = true;
-      }
-
-      console.log('%c', devtools);
-      return !!devtools.opened;
-    }
-
     var data = readGameData();
 
     document.querySelector('#js-hiscore').innerHTML = data.hiScore;
@@ -253,7 +240,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       }
     });
 
-    // stayin' online
+    // stayin' online...
     var onlineTime = 0;
     var onlineTick = setInterval(function () {
       if (!document.hidden && navigator.onLine) {
@@ -267,9 +254,31 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       }
     }, 1000);
 
+    // click me...
     document.querySelector('#js-achievement-click').addEventListener('click', function(){
       unlockAchievement('click');
     });
+
+    // tool up...
+    // detecting if devtools are open, via
+    // https://github.com/sindresorhus/devtools-detect
+    var toolsTick = setInterval(function () {
+      var widthThreshold = window.outerWidth - window.innerWidth > 160;
+      var heightThreshold = window.outerHeight - window.innerHeight > 160;
+
+      if (!(heightThreshold && widthThreshold) &&
+        ((window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) || widthThreshold || heightThreshold)) {
+
+        unlockAchievement('tool-up');
+        clearInterval(toolsTick);
+      }
+    }, 500);
+
+    function devToolsOpen() {
+      return isDevToolsOpen;
+    }
+
+    // GAME 'LOOP'
 
     // if game loads in offline mode start it automatically
     var offlineFirst = false;
@@ -280,7 +289,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
     var scoreTick; // interval for counting the score
 
-    // game on!
+    // network off, game on!
     function goOffline() {
       score = 0; // OOOPS, very tempting leaked global variable...
 
@@ -294,11 +303,6 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       // offline first...
       if (offlineFirst) {
         unlockAchievement('first');
-      }
-
-      // tool up...
-      if (devToolsOpen()) {
-        unlockAchievement('tool-up');
       }
 
       // go offline...
