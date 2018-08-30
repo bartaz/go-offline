@@ -267,15 +267,24 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
       if (!(heightThreshold && widthThreshold) &&
         ((window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) || widthThreshold || heightThreshold)) {
-
         unlockAchievement('tool-up');
+      }
+
+      if (data.achievements['tool-up']) {
         clearInterval(toolsTick);
       }
     }, 500);
 
-    function devToolsOpen() {
-      return isDevToolsOpen;
-    }
+    // just in case if devtools detecting doesn't work
+    // for example when debugging mobile remotely or with detached window
+    setTimeout(function () {
+      if (!data.achievements['tool-up']) {
+        window.IveGotTheTools = function() { unlockAchievement('tool-up'); }
+        console.log("Welcome to the console! Looks like you know your tools!\n\n" +
+                    "If you haven't got your 'tool up' achievement yet, type: IveGotTheTools()");
+      }
+    }, 1000);
+
 
     // GAME 'LOOP'
 
