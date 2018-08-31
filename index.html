@@ -111,6 +111,10 @@ h3 {
   content: ' - NEW!';
   color: yellowgreen;
 }
+
+.achievement + .secret {
+  display: none;
+}
 </style>
 <body>
 <h1>
@@ -134,9 +138,10 @@ h3 {
 <p class="achievement" id="js-achievement-sharing" data-hint="what's the point of hi score if you don't share it?">sharing is caring</p>
 <p class="achievement" id="js-achievement-distracted" data-hint="staying online is boring, try doing something else in the meantime">distracted</p>
 <p class="achievement" id="js-achievement-tool-up" data-hint="just open up your tool box">tool up</p>
-<p class="achievement" id="js-achievement-cheater" data-hint="what is this `score` variable doing in global scope?">cheater</p>
+<p class="achievement" id="js-achievement-cheater" data-hint="try to cheat your score">cheater</p>
 <p class="achievement" id="js-achievement-click" data-hint="it's just asking for it">click me</p>
 <p class="achievement" id="js-achievement-13-13-13" data-hint="be offline on a very specific time of the day">13:13:13</p>
+<p class="achievement secret" id="js-achievement-start-over" data-hint="remove all your progress">start over</p>
 
 <script>
 /**
@@ -204,6 +209,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
     }
 
     var data = readGameData();
+    saveGameData(data);
 
     document.querySelector('#js-hiscore').innerHTML = data.hiScore;
 
@@ -215,6 +221,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
     function renderUnlockedAchievement(key, isNew) {
       document.querySelector('#js-achievement-' + key).classList.add('unlocked', isNew ? 'new' : '-');
+      document.querySelector('#js-achievement-' + key).classList.remove('secret');
       document.body.insertBefore(document.querySelector('#js-achievement-' + key), unlockedEl.nextSibling);
       unlockedEl.classList.remove('hidden');
 
@@ -227,7 +234,11 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
     // show unlocked achievements
     Object.keys(data.achievements)
       .filter(function(key) { return data.achievements[key]; })
-      .map(function(key) { return renderUnlockedAchievement(key); });
+      .map(function(key, i, keys) {
+        // special case for start over to make sure it's marked as new after reload
+        var isNew = (key === 'start-over' && keys.length === 1);
+        return renderUnlockedAchievement(key, isNew);
+      });
 
     // helper for unlocking achievements
     function unlockAchievement(key) {
@@ -262,12 +273,11 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
     // stayin' online...
     var onlineTime = 0;
-    var onlineTick = setInterval(function () {
+    setInterval(function () {
       if (!document.hidden && navigator.onLine) {
         onlineTime++;
         if (onlineTime > 42) {
           unlockAchievement('online');
-          clearInterval(onlineTick);
         }
       } else {
         onlineTime = 0;
@@ -282,17 +292,13 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
     // tool up...
     // detecting if devtools are open, via
     // https://github.com/sindresorhus/devtools-detect
-    var toolsTick = setInterval(function () {
+    setInterval(function () {
       var widthThreshold = window.outerWidth - window.innerWidth > 160;
       var heightThreshold = window.outerHeight - window.innerHeight > 160;
 
       if (!(heightThreshold && widthThreshold) &&
         ((window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) || widthThreshold || heightThreshold)) {
         unlockAchievement('tool-up');
-      }
-
-      if (data.achievements['tool-up']) {
-        clearInterval(toolsTick);
       }
     }, 500);
 
@@ -306,6 +312,39 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       }
     }, 1000);
 
+    // reset game to initial state
+    function startOver() {
+      score = 0;
+      scoreEl.innerHTML = score;
+      data = readGameData();
+      saveGameData(data);
+      document.querySelector('#js-hiscore').innerHTML = data.hiScore;
+
+      [
+        "start-over", "13-13-13", "click", "cheater", "tool-up", "distracted", "sharing", "hi", "online", "lucky", "leet", "13-seconds", "first", "go-offline"
+      ].forEach(function (key) {
+        document.querySelector('#js-achievement-' + key).classList.remove('unlocked', 'new');
+        document.body.insertBefore(document.querySelector('#js-achievement-' + key), lockedEl.nextSibling);
+      });
+    }
+
+    setInterval(function() {
+      var storedData = localStorage.getItem('GO_OFFLINE_DATA');
+
+      if (storedData === null) {
+        // if game data in local storage was removed
+        // start over...
+        startOver();
+        unlockAchievement('start-over');
+      } else {
+        // otherwise if it was modified
+        // cheater...
+        if (JSON.stringify(data) !== storedData) {
+          saveGameData(data);
+          unlockAchievement('cheater');
+        }
+      }
+    }, 500);
 
     // GAME 'LOOP'
 
