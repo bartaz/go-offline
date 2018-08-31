@@ -78,10 +78,24 @@ h1 {
 }
 
 /* ACHIEVEMENTS */
+h3 {
+  margin-top: 2rem;
+}
+
+.hidden {
+  display: none;
+}
+
 .achievement {
   transition: opacity 500ms;
   opacity: 0.5;
   text-decoration: line-through;
+}
+
+.achievement::before {
+  content: '★ ';
+  transition: opacity 500ms;
+  opacity: 0;
 }
 
 .unlocked.achievement {
@@ -89,18 +103,13 @@ h1 {
   text-decoration: none;
 }
 
+.unlocked.achievement::before {
+  opacity: 1;
+}
+
 .new.achievement::after {
   content: ' - NEW!';
   color: yellowgreen;
-}
-
-.star {
-  transition: opacity 500ms;
-  opacity: 0;
-}
-
-.unlocked .star {
-  opacity: 1;
 }
 </style>
 <body>
@@ -113,20 +122,21 @@ h1 {
 </p>
 <p class="score">&nbsp;&nbsp;&nbsp;SCORE: <span id="js-score">0</span></p>
 
-<h3>ACHIEVEMENTS</h3>
-<p class="achievement" id="js-achievement-go-offline"><span class="star">&#9733; </span>go offline</p>
-<p class="achievement" id="js-achievement-first"     ><span class="star">&#9733; </span>offline first</p>
-<p class="achievement" id="js-achievement-13-seconds"><span class="star">&#9733; </span>13 seconds to Mars</p>
-<p class="achievement" id="js-achievement-leet"      ><span class="star">&#9733; </span>leet</p>
-<p class="achievement" id="js-achievement-lucky"     ><span class="star">&#9733; </span>get lucky</p>
-<p class="achievement" id="js-achievement-online"    ><span class="star">&#9733; </span>stayin' online</p>
-<p class="achievement" id="js-achievement-hi"        ><span class="star">&#9733; </span>hi!</p>
-<p class="achievement" id="js-achievement-sharing"   ><span class="star">&#9733; </span>sharing is caring</p>
-<p class="achievement" id="js-achievement-distracted"><span class="star">&#9733; </span>distracted</p>
-<p class="achievement" id="js-achievement-tool-up"   ><span class="star">&#9733; </span>tool up</p>
-<p class="achievement" id="js-achievement-cheater"   ><span class="star">&#9733; </span>cheater</p>
-<p class="achievement" id="js-achievement-click"     ><span class="star">&#9733; </span>click me</p>
-<p class="achievement" id="js-achievement-13-13-13"  ><span class="star">&#9733; </span>13:13:13</p>
+<h3 id="js-achievements" class="hidden">ACHIEVEMENTS</h3>
+<h3 id="js-locked-achievements">LOCKED ACHIEVEMENTS</h3>
+<p class="achievement" id="js-achievement-go-offline" data-hint="title says it all">go offline</p>
+<p class="achievement" id="js-achievement-first" data-hint="let the service worker do its work">offline first</p>
+<p class="achievement" id="js-achievement-13-seconds" data-hint="stay offline for a mere 13 seconds">13 seconds to Mars</p>
+<p class="achievement" id="js-achievement-leet" data-hint="you need to stay offline quite a while to get to the 1337 club">leet</p>
+<p class="achievement" id="js-achievement-lucky" data-hint="play several times and maybe you'll get lucky">get lucky</p>
+<p class="achievement" id="js-achievement-online" data-hint="sometimes the best way to win is not to play">stayin' online</p>
+<p class="achievement" id="js-achievement-hi" data-hint="what's the point of hi score if you don't beat it?">hi</p>
+<p class="achievement" id="js-achievement-sharing" data-hint="what's the point of hi score if you don't share it?">sharing is caring</p>
+<p class="achievement" id="js-achievement-distracted" data-hint="staying online is boring, try doing something else in the meantime">distracted</p>
+<p class="achievement" id="js-achievement-tool-up" data-hint="just open up your tool box">tool up</p>
+<p class="achievement" id="js-achievement-cheater" data-hint="what is this `score` variable doing in global scope?">cheater</p>
+<p class="achievement" id="js-achievement-click" data-hint="it's just asking for it">click me</p>
+<p class="achievement" id="js-achievement-13-13-13" data-hint="be offline on a very specific time of the day">13:13:13</p>
 
 <script>
 /**
@@ -200,12 +210,24 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
     // INIT ACHIEVEMENTS
     // ===================
 
-    // show unlocked achievements
-    Object.keys(data.achievements).forEach(function (key) {
-      if (data.achievements[key]) {
-        document.querySelector('#js-achievement-' + key).classList.add('unlocked');
+    const unlockedEl = document.querySelector('#js-achievements');
+    const lockedEl = document.querySelector('#js-locked-achievements');
+
+    function renderUnlockedAchievement(key, isNew) {
+      document.querySelector('#js-achievement-' + key).classList.add('unlocked', isNew ? 'new' : '-');
+      document.body.insertBefore(document.querySelector('#js-achievement-' + key), unlockedEl.nextSibling);
+      unlockedEl.classList.remove('hidden');
+
+      // when all achievements where unlocked, hide 'locked' heading
+      if (!lockedEl.nextElementSibling.classList.contains('achievement')) {
+        document.body.removeChild(lockedEl);
       }
-    });
+    }
+
+    // show unlocked achievements
+    Object.keys(data.achievements)
+      .filter(function(key) { return data.achievements[key]; })
+      .map(function(key) { return renderUnlockedAchievement(key); });
 
     // helper for unlocking achievements
     function unlockAchievement(key) {
@@ -221,8 +243,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
         }
 
         data.achievements[key] = true;
-        document.querySelector('#js-achievement-' + key).classList.add('unlocked', 'new');
-        document.querySelector('#js-achievement-' + key).scrollIntoView();
+        renderUnlockedAchievement(key, true);
         saveGameData(data);
       }
     }
@@ -385,30 +406,9 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
   }
 
   // no point in setting up the game if browser doesn't support offline/online events
-  // sorry...
   if ('onLine' in navigator) {
     game();
   }
-
-  /*
-    You've got this far going through internals of this silly little game.
-    Thank you. As a token of my appreciation please accept these hints about
-    all the achievements in the game.
-
-    go offline - title says it all
-    offline first - let the service worker do its work
-    13 seconds to Mars - stay offline for a mere 13 seconds
-    leet - you need to stay offline quite a while to get to the 1337 club
-    get lucky - have you tried turning it off and on again? do it several times and maybe you'll get lucky
-    stayin' online - just do the opposite of what the game is about
-    hi! - what's the point of hi score if you don't beat it?
-    sharing is caring - what's the point of hi score if you don't share it?
-    distracted - staying online is boring, try doing something else in the meantime
-    tool up - just open up your tool box (but if you are reading this you probably got that already?)
-    cheater - wouldn't it be great if you could just change your score? oh wait, what is this `score` variable doing in global scope?
-    click me - it's just asking for it
-    13:13:13 - be offline on a very specific time of the day
-  */
 </script>
 </body>
 </html>
