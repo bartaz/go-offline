@@ -137,7 +137,6 @@ h3 {
 <p class="achievement" id="js-achievement-hi" data-hint="what's the point of hi score if you don't beat it?">hi</p>
 <p class="achievement" id="js-achievement-sharing" data-hint="what's the point of hi score if you don't share it?">sharing is caring</p>
 <p class="achievement" id="js-achievement-distracted" data-hint="staying online is boring, try doing something else in the meantime">distracted</p>
-<p class="achievement" id="js-achievement-tool-up" data-hint="just open up your tool box">tool up</p>
 <p class="achievement" id="js-achievement-cheater" data-hint="try to cheat your score">cheater</p>
 <p class="achievement" id="js-achievement-click" data-hint="it's just asking for it">click me</p>
 <p class="achievement" id="js-achievement-13-13-13" data-hint="be offline on a very specific time of the day">13:13:13</p>
@@ -324,29 +323,6 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       unlockAchievement('click');
     });
 
-    // tool up...
-    // detecting if devtools are open, via
-    // https://github.com/sindresorhus/devtools-detect
-    setInterval(function () {
-      var widthThreshold = window.outerWidth - window.innerWidth > 160;
-      var heightThreshold = window.outerHeight - window.innerHeight > 160;
-
-      if (!(heightThreshold && widthThreshold) &&
-        ((window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) || widthThreshold || heightThreshold)) {
-        unlockAchievement('tool-up');
-      }
-    }, 500);
-
-    // just in case if devtools detecting doesn't work
-    // for example when debugging mobile remotely or with detached window
-    setTimeout(function () {
-      if (!data.achievements['tool-up']) {
-        window.IveGotTheTools = function() { unlockAchievement('tool-up'); }
-        console.log("Welcome to the console! Looks like you know your tools!\n\n" +
-                    "If you haven't got your 'tool up' achievement yet, type: IveGotTheTools()");
-      }
-    }, 1000);
-
     // reset game to initial state
     function startOver() {
       score = 0;
@@ -356,7 +332,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       document.querySelector('#js-hiscore').innerHTML = data.hiScore;
 
       [
-        "start-over", "13-13-13", "click", "cheater", "tool-up", "distracted", "sharing", "hi", "online", "lucky", "leet", "13-seconds", "first", "go-offline"
+        "start-over", "13-13-13", "click", "cheater", "distracted", "sharing", "hi", "online", "lucky", "leet", "13-seconds", "first", "go-offline"
       ].forEach(function (key) {
         document.querySelector('#js-achievement-' + key).classList.remove('unlocked', 'new');
         document.body.insertBefore(document.querySelector('#js-achievement-' + key), lockedEl.nextSibling);
