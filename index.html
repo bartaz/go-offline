@@ -115,6 +115,81 @@ h3 {
 .achievement + .secret {
   display: none;
 }
+
+/* HINTS */
+.hint {
+  position: fixed;
+  bottom: 0;
+  right: 10px;
+  left: 10px;
+}
+
+.clippy {
+  position: absolute;
+  bottom: 0;
+  right: -10px;
+  transform: translate(20px,20px);
+  transition: 300ms;
+  cursor: pointer;
+}
+
+.spoken .clippy,
+.clippy:hover {
+  transform: translate(0px,0px) rotate(30deg);
+}
+
+/* speach bubble based on https://leaverou.github.io/bubbly/ */
+.bubble {
+	position: absolute;
+  bottom: 60px;
+  right: 0;
+
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 100px;
+  padding: 1em;
+
+  background: #FFF;
+  border: 1px solid black;
+	border-radius: 5px;
+
+  opacity: 0;
+  transition: 300ms opacity;
+}
+
+.spoken .bubble {
+  opacity: 1;
+}
+
+.bubble:before {
+	bottom: -20px;
+	right: 40px;
+	border: 20px solid transparent;
+	border-top-color: #000;
+}
+
+.bubble:after {
+	bottom: -18px;
+	right: 41px;
+	border: 18px solid transparent;
+	border-top-color: #FFF;
+}
+
+.bubble:before,
+.bubble:after {
+	content: '';
+	position: absolute;
+	width: 0;
+	height: 0;
+	border-bottom: 0;
+	border-right: 0;
+}
+
+.bubble span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 </style>
 <body>
 <h1>
@@ -128,19 +203,27 @@ h3 {
 
 <h3 id="js-achievements">ACHIEVEMENTS <span id="js-achievements-count"></span></h3>
 <h3 id="js-locked-achievements" class="hidden">LOCKED ACHIEVEMENTS</h3>
-<p class="achievement" id="js-achievement-go-offline" data-hint="title says it all">go offline</p>
-<p class="achievement" id="js-achievement-first" data-hint="let the service worker do its work">offline first</p>
-<p class="achievement" id="js-achievement-13-seconds" data-hint="stay offline for a mere 13 seconds">13 seconds to Mars</p>
-<p class="achievement" id="js-achievement-leet" data-hint="you need to stay offline quite a while to get to the 1337 club">leet</p>
-<p class="achievement" id="js-achievement-lucky" data-hint="play several times and maybe you'll get lucky">get lucky</p>
-<p class="achievement" id="js-achievement-online" data-hint="sometimes the best way to win is not to play">stayin' online</p>
-<p class="achievement" id="js-achievement-hi" data-hint="what's the point of hi score if you don't beat it?">hi</p>
-<p class="achievement" id="js-achievement-sharing" data-hint="what's the point of hi score if you don't share it?">sharing is caring</p>
-<p class="achievement" id="js-achievement-distracted" data-hint="staying online is boring, try doing something else in the meantime">distracted</p>
-<p class="achievement" id="js-achievement-cheater" data-hint="try to cheat your score">cheater</p>
-<p class="achievement" id="js-achievement-click" data-hint="it's just asking for it">click me</p>
-<p class="achievement" id="js-achievement-13-13-13" data-hint="be offline on a very specific time of the day">13:13:13</p>
-<p class="achievement secret" id="js-achievement-start-over" data-hint="remove all your progress">start over</p>
+<p class="achievement" id="js-achievement-go-offline">go offline</p>
+<p class="achievement" id="js-achievement-first">offline first</p>
+<p class="achievement" id="js-achievement-13-seconds">13 seconds to Mars</p>
+<p class="achievement" id="js-achievement-leet">leet</p>
+<p class="achievement" id="js-achievement-lucky">get lucky</p>
+<p class="achievement" id="js-achievement-online">stayin' online</p>
+<p class="achievement" id="js-achievement-hi">hi</p>
+<p class="achievement" id="js-achievement-sharing">sharing is caring</p>
+<p class="achievement" id="js-achievement-distracted">distracted</p>
+<p class="achievement" id="js-achievement-cheater">cheater</p>
+<p class="achievement" id="js-achievement-click">click me</p>
+<p class="achievement" id="js-achievement-13-13-13">13:13:13</p>
+<p class="secret achievement" id="js-achievement-start-over">start over</p>
+
+<div class="hint">
+  <!-- icon by Freepik (http://www.freepik.com) from flaticon.com, licensed by CC 3.0 BY -->
+  <svg class="clippy" xmlns="http://www.w3.org/2000/svg" width="50" height="50">
+    <path d="M46.1 27l-26-26a1.7 1.7 0 0 0-2.3 2.3l26 26a10 10 0 0 1-14 14L5.2 19a6.7 6.7 0 0 1 9.5-9.5l21.1 21a3.4 3.4 0 0 1-4.7 4.8L12.7 16.7a1.7 1.7 0 0 0-2.4 2.4l18.5 18.5a6.7 6.7 0 0 0 9.5-9.5L17.2 7A10 10 0 0 0 2.9 21.2l24.5 24.5A13.3 13.3 0 0 0 46 26.9z"/>
+  </svg>
+  <div class="bubble"></div>
+</div>
 
 <script>
 /**
@@ -217,6 +300,9 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
     const unlockedEl = document.querySelector('#js-achievements');
     const lockedEl = document.querySelector('#js-locked-achievements');
+    const achievementKeys = [].slice.call(document.querySelectorAll('.achievement'))
+      .map(function(el) { return el.id.replace('js-achievement-', '') })
+      .reverse();
 
     function renderUnlockedAchievement(key, isNew) {
       document.querySelector('#js-achievement-' + key).classList.add('unlocked', isNew ? 'new' : '-');
@@ -235,10 +321,10 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
         "[" +
           Object.keys(data.achievements).length +
           "/" +
-          document.querySelectorAll('.achievement').length +
+          achievementKeys.length +
         "]";
 
-      if (Object.keys(data.achievements).length === document.querySelectorAll('.achievement').length) {
+      if (Object.keys(data.achievements).length === achievementKeys.length) {
         [
           "CONGRATULATIONS",
           "you managed to beat the whole damn ga-ame…",
@@ -331,9 +417,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       saveGameData(data);
       document.querySelector('#js-hiscore').innerHTML = data.hiScore;
 
-      [
-        "start-over", "13-13-13", "click", "cheater", "distracted", "sharing", "hi", "online", "lucky", "leet", "13-seconds", "first", "go-offline"
-      ].forEach(function (key) {
+      achievementKeys.forEach(function (key) {
         document.querySelector('#js-achievement-' + key).classList.remove('unlocked', 'new');
         document.body.insertBefore(document.querySelector('#js-achievement-' + key), lockedEl.nextSibling);
       });
@@ -488,19 +572,24 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       HINTS[key] = HINTS[key].map(decode);
     });
 
+    var hintEl = document.querySelector('.hint');
+    var bubbleEl = document.querySelector('.bubble');
+    var clippyEl = document.querySelector('.clippy');
     var hintTimeout;
 
     window.hint = function hint() {
+      // just messin' with 'stayin online' achievement, so that getting hints
+      // resets the timer to make it a bit harder to get
+      onlineTime = 0
+
       var hint;
 
       if (!data.achievements['go-offline']) {
         // if 'go offline' is not unlocked yet hint only about that
         hint = HINTS['go-offline'][availableHints['go-offline']--];
       } else {
-        // find random locked achievement that has hints available
-        var list = [
-          "start-over", "13-13-13", "click", "cheater", "distracted", "sharing", "hi", "online", "lucky", "leet", "13-seconds", "first", "go-offline"
-        ]
+        // find a random locked achievement that still has hints available
+        var list = achievementKeys
           .filter(function(key) { return !data.achievements[key]; })
           .filter(function(key) { return availableHints[key] >= 0; });
 
@@ -515,7 +604,30 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       }
 
       console.log("📎 " + hint);
+
+      // wrap URL hints in links
+      if (hint.indexOf('http') === 0) {
+        hint = '<a href="' + hint + '" target="_blank">' + hint + '</a>';
+      }
+
+      bubbleEl.innerHTML = '<span>' + hint + '</span>';
+      hintEl.classList.add('spoken');
+
+      hintTimeout = setTimeout(function(){
+        hintEl.classList.remove('spoken');
+      }, 10000);
     }
+
+    clippyEl.addEventListener('click', function(event) {
+      clearTimeout(hintTimeout);
+      hint();
+      event.stopPropagation();
+    });
+
+    document.addEventListener('click', function() {
+      clearTimeout(hintTimeout);
+      hintEl.classList.remove('spoken');
+    });
   }
 
   // no point in setting up the game if browser doesn't support offline/online events
