@@ -453,6 +453,69 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
     window.addEventListener('offline', goOffline);
     window.addEventListener('online', goOnline);
+
+    // HINTS
+    console.log("📎 It looks like you are trying to figure out how this game works.\n📎 If you need any help, type: hint()");
+
+    // sorry, as much as I like the idea of having the source open and readable
+    // some things are meant to remain secret
+    // wanna get some hints? find them in the game
+    // or just decode them yourself, you have the source anyway
+    const HINTS = {
+      "go-offline":["iuuq;00xxx/mnhugz/dpn0@t>e'r>ipx,up,ejtbcmf,ofuxpsl,dpoofdujpo","Uvso!pgg!zpvs!xjgj-!vtf!bjsqmbof!npef-!voqmvh!uif!ofuxpsl!dbcmf-!uispx!zpvs!spvufs!pvu!pg!uif!xjoepx///","Ju(t!bmm!bcpvu!uif!ofuxpsl!boe!cfjoh!OPU!dpoofdufe!up!ju/","Kvtu!ep!xibu!uif!ujumf!tbzt;!hp!PGGMJOF/"],
+      "first":["Gjstu!hp!pggmjof!)zpv!lopx!ipx!up!ep!uijt!bmsfbez-!sjhiu@*-!uifo!sfmpbe!uif!hbnf;!pggmjof!gjstu/","Mpbe!uif!hbnf!xijmf!cfjoh!pggmjof/","Mfu!uif!tfswjdf!xpslfs!ep!jut!xpsl/"],
+      "13-seconds":["Kvtu!tubz!pggmjof!gps!b!nfsf!24!tfdpoet/","Usz!tdpsjoh!24!qpjout/"],
+      "leet":["Tdpsf!2448!qpjout/!Uibu(t!b!mpu-!cvu!nbzcf!zpv!dbo!difbu!ju@","Zpv!offe!up!tubz!pggmjof!rvjuf!b!xijmf!up!hfu!up!uif!mffu!2448!dmvc/","Ep!zpv!lopx!uif!mffu!tqfbl@"],
+      "lucky":["Uvso!uif!ofuxpsl!pgg!boe!po!voujm!zpv!hfu!mvdlz/","Qmbz!uif!hbnf!tfwfsbm!ujnft!boe!nbzcf!zpv(mm!hfu!mvdlz/","Ibwf!zpv!usjfe!uvsojoh!ju!pgg!boe!po!bhbjo@"],
+      "online":["Tubz!pomjof!gps!vojoufssvqufe!53!tfdpoet/","Usz!epjoh!uif!pqqptjuf!pg!xibu!uif!hbnf!jt!bcpvu/","Tpnfujnft!uif!cftu!xbz!up!xjo!jt!opu!up!qmbz/"],
+      "hi":["Cfbu!zpvs!pxo!ij!tdpsf/","Xibu(t!uif!qpjou!pg!ij!tdpsf!jg!zpv!epo(u!cfbu!ju@","Ij\""],
+      "sharing":["Cfbu!zpvs!ij!tdpsf!boe!tibsf!ju!up!uif!xpsme\"","Up!tibsf!zpvs!ij!tdpsf!gjstu!zpv!offe!up!cfbu!ju/","Xibu(t!uif!qpjou!pg!ij!tdpsf!jg!zpv!epo(u!tibsf!ju@"],
+      "distracted":["Xijmf!cfjoh!pggmjof-!txjudi!up!bopuifs!ubc!ps!xjoepx/","Epo(u!zpv!xboob!sfbe!tpnfuijoh!jo!uif!puifs!ubc!xijmf!qmbzjoh!uijt!hbnf@","Tubzjoh!pomjof!jt!cpsjoh/!Usz!epjoh!tpnfuijoh!fmtf!jo!uif!nfboujnf/"],
+      "cheater":["Usz!up!dibohf!zpvs!atdpsfa!jo!uif!dpotpmf!xifo!uif!hbnf!jt!po/","Bmm!hbnf!ebub!jt!tupsfe!jo!uif!mpdbmTupsbhf-!xiz!opu!ibwjoh!b!qmbz!xjui!ju@","Uifsf!jt!b!atdpsfa!wbsjbcmf!)vo*joufoujpobmmz!mfblfe!joup!uif!hmpcbm!tdpqf/","Usz!up!difbu!zpvs!tdpsf/"],
+      "click":["Kvtu!dmjdl!uif!uijoh!uibu!tbzt!#dmjdl!nf#/","Dmjdl!ju/","Uijt!pof!bdijfwfnfou!jt!kvtu!btljoh!gps!ju/"],
+      "13-13-13":["Zpv!dbo!qspcbcmz!bekvtu!zpvs!tztufn!dmpdl!opu!up!xbju!gps!24;24;24/","Qmbz!uif!hbnf!)boe!cf!pggmjof*!bu!24;24;24/","Usz!cfjoh!pggmjof!po!b!wfsz!tqfdjgjd!ujnf!pg!uif!ebz/","II;NN;TT"],
+      "start-over":["Sfnpwf!bmm!zpvs!qsphsftt!gspn!mpdbmTupsbhf/","J!lopx!zpvs!qsphsftt!jt!qsfdjpvt-!cvu!xiz!opu!tubsujoh!gspn!tdsbudi@","Dpnqmfuf!bmm!uif!bdijfwfnfout!boe!uif!tfdsfu!xjmm!bqqfbs/","Xboob!lopx!b!tfdsfu@!Uifsf!jt!pof!tfdsfu!bdijfwfnfou!up!vompdl/"]
+    };
+
+    var availableHints = {}
+
+    function decode(hint) {
+      return hint.replace(/./g, function(c) { return String.fromCharCode(c.charCodeAt(0) - 1); });
+    }
+
+    Object.keys(HINTS).forEach(function(key) {
+      availableHints[key] = HINTS[key].length - 1;
+      HINTS[key] = HINTS[key].map(decode);
+    });
+
+    var hintTimeout;
+
+    window.hint = function hint() {
+      var hint;
+
+      if (!data.achievements['go-offline']) {
+        // if 'go offline' is not unlocked yet hint only about that
+        hint = HINTS['go-offline'][availableHints['go-offline']--];
+      } else {
+        // find random locked achievement that has hints available
+        var list = [
+          "start-over", "13-13-13", "click", "cheater", "distracted", "sharing", "hi", "online", "lucky", "leet", "13-seconds", "first", "go-offline"
+        ]
+          .filter(function(key) { return !data.achievements[key]; })
+          .filter(function(key) { return availableHints[key] >= 0; });
+
+        if (list.length) {
+          var key = list[~~(Math.random() * list.length)];
+          hint = HINTS[key][availableHints[key]--];
+        }
+      }
+
+      if (!hint) {
+        hint = decode("Zpv!lopx!bt!nvdi!bt!J!ep/");
+      }
+
+      console.log("📎 " + hint);
+    }
   }
 
   // no point in setting up the game if browser doesn't support offline/online events
