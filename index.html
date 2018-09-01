@@ -126,8 +126,8 @@ h3 {
 </p>
 <p class="score">&nbsp;&nbsp;&nbsp;SCORE: <span id="js-score">0</span></p>
 
-<h3 id="js-achievements" class="hidden">ACHIEVEMENTS</h3>
-<h3 id="js-locked-achievements">LOCKED ACHIEVEMENTS</h3>
+<h3 id="js-achievements">ACHIEVEMENTS <span id="js-achievements-count"></span></h3>
+<h3 id="js-locked-achievements" class="hidden">LOCKED ACHIEVEMENTS</h3>
 <p class="achievement" id="js-achievement-go-offline" data-hint="title says it all">go offline</p>
 <p class="achievement" id="js-achievement-first" data-hint="let the service worker do its work">offline first</p>
 <p class="achievement" id="js-achievement-13-seconds" data-hint="stay offline for a mere 13 seconds">13 seconds to Mars</p>
@@ -223,11 +223,43 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       document.querySelector('#js-achievement-' + key).classList.add('unlocked', isNew ? 'new' : '-');
       document.querySelector('#js-achievement-' + key).classList.remove('secret');
       document.body.insertBefore(document.querySelector('#js-achievement-' + key), unlockedEl.nextSibling);
-      unlockedEl.classList.remove('hidden');
+      lockedEl.classList.remove('hidden');
 
       // when all achievements where unlocked, hide 'locked' heading
       if (!lockedEl.nextElementSibling.classList.contains('achievement')) {
-        document.body.removeChild(lockedEl);
+        lockedEl.classList.add('hidden');
+      }
+    }
+
+    function renderAchievementsCount() {
+      document.querySelector('#js-achievements-count').innerHTML =
+        "[" +
+          Object.keys(data.achievements).length +
+          "/" +
+          document.querySelectorAll('.achievement').length +
+        "]";
+
+      if (Object.keys(data.achievements).length === document.querySelectorAll('.achievement').length) {
+        [
+          "CONGRATULATIONS",
+          "you managed to beat the whole damn ga-ame…",
+          "we're happy you made it,",
+          "but how are you gonna spend the rest of this da-ay?",
+          "maybe watch a <a href='https://youtu.be/VmuiwOGi5gA?t=52s' target='_blank'>video</a>,",
+          "maybe press refresh and <a href=\"#\" id='js-reset'>start again</a>…",
+        ]
+          .forEach(function(line, i) {
+            var el = document.createElement(i ? 'p' : 'h3');
+            el.innerHTML = line;
+            document.body.insertBefore(el, unlockedEl);
+          });
+
+        document.querySelector('#js-reset').addEventListener('click', function(event) {
+          data = null;
+          saveGameData(data);
+          window.location.reload();
+          event.preventDefault();
+        });
       }
     }
 
@@ -239,6 +271,8 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
         var isNew = (key === 'start-over' && keys.length === 1);
         return renderUnlockedAchievement(key, isNew);
       });
+
+    renderAchievementsCount();
 
     // helper for unlocking achievements
     function unlockAchievement(key) {
@@ -255,6 +289,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
         data.achievements[key] = true;
         renderUnlockedAchievement(key, true);
+        renderAchievementsCount();
         saveGameData(data);
       }
     }
