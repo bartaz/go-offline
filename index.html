@@ -558,7 +558,8 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       "cheater":["Usz!up!dibohf!zpvs!atdpsfa!jo!uif!dpotpmf!xifo!uif!hbnf!jt!po/","Bmm!hbnf!ebub!jt!tupsfe!jo!uif!mpdbmTupsbhf-!xiz!opu!ibwjoh!b!qmbz!xjui!ju@","Uifsf!jt!b!atdpsfa!wbsjbcmf!)vo*joufoujpobmmz!mfblfe!joup!uif!hmpcbm!tdpqf/","Usz!up!difbu!zpvs!tdpsf/"],
       "click":["Kvtu!dmjdl!uif!uijoh!uibu!tbzt!#dmjdl!nf#/","Dmjdl!ju/","Uijt!pof!bdijfwfnfou!jt!kvtu!btljoh!gps!ju/"],
       "13-13-13":["Zpv!dbo!qspcbcmz!bekvtu!zpvs!tztufn!dmpdl!opu!up!xbju!gps!24;24;24/","Qmbz!uif!hbnf!)boe!cf!pggmjof*!bu!24;24;24/","Usz!cfjoh!pggmjof!po!b!wfsz!tqfdjgjd!ujnf!pg!uif!ebz/","II;NN;TT"],
-      "start-over":["Sfnpwf!bmm!zpvs!qsphsftt!gspn!mpdbmTupsbhf/","J!lopx!zpvs!qsphsftt!jt!qsfdjpvt-!cvu!xiz!opu!tubsujoh!gspn!tdsbudi@","Dpnqmfuf!bmm!uif!bdijfwfnfout!boe!uif!tfdsfu!xjmm!bqqfbs/","Xboob!lopx!b!tfdsfu@!Uifsf!jt!pof!tfdsfu!bdijfwfnfou!up!vompdl/"]
+      "start-over":["Qttu///!Uif!tfdsfu!bdijfwfnfou!jt!dbmmfe!(tubsu!pwfs(/","Qttu///!Dpnqmfuf!bmm!uif!bdijfwfnfout!boe!uif!tfdsfu!xjmm!bqqfbs/","Qttu///!Xboob!lopx!b!tfdsfu@!Uifsf!jt!pof!tfdsfu!bdijfwfnfou!up!vompdl/"],
+      "start-over-revealed":["mpdbmTupsbhf/sfnpwfJufn)(HP`PGGMJOF`EBUB(*<","Sfnpwf!bmm!zpvs!qsphsftt!gspn!mpdbmTupsbhf/","Zpv!offe!up!hfu!sje!pg!bmm!zpvs!tbwfe!hbnf!ebub/","J!lopx!zpvs!qsphsftt!jt!qsfdjpvt-!cvu!xiz!opu!tubsujoh!gspn!tdsbudi@"]
     };
 
     var availableHints = {}
@@ -595,6 +596,11 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
         if (list.length) {
           var key = list[~~(Math.random() * list.length)];
+
+          // when secret is revealed, give better hints about it
+          if (list.length === 1 && key === 'start-over') {
+            key = 'start-over-revealed';
+          }
           hint = HINTS[key][availableHints[key]--];
         }
       }
@@ -613,13 +619,13 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       bubbleEl.innerHTML = '<span>' + hint + '</span>';
       hintEl.classList.add('spoken');
 
+      clearTimeout(hintTimeout);
       hintTimeout = setTimeout(function(){
         hintEl.classList.remove('spoken');
       }, 10000);
     }
 
     clippyEl.addEventListener('click', function(event) {
-      clearTimeout(hintTimeout);
       hint();
       event.stopPropagation();
     });
