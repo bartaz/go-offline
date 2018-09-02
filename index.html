@@ -133,6 +133,10 @@ h3 {
   cursor: pointer;
 }
 
+.offline .clippy {
+  transform: translate(60px,60px) rotate(-30deg);
+}
+
 .spoken .clippy,
 .clippy:hover {
   transform: translate(0px,0px) rotate(30deg);
@@ -577,6 +581,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
     var bubbleEl = document.querySelector('.bubble');
     var clippyEl = document.querySelector('.clippy');
     var hintTimeout;
+    var lastHint;
 
     window.hint = function hint() {
       // just messin' with 'stayin online' achievement, so that getting hints
@@ -585,36 +590,98 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
       var hint;
 
-      if (!data.achievements['go-offline']) {
+      if (navigator.onLine) {
         // if 'go offline' is not unlocked yet hint only about that
-        hint = HINTS['go-offline'][availableHints['go-offline']--];
-      } else {
-        // find a random locked achievement that still has hints available
-        var list = achievementKeys
+        // or find a random locked achievement that still has hints available
+        var list = (!data.achievements['go-offline'] ? ['go-offline'] : achievementKeys)
           .filter(function(key) { return !data.achievements[key]; })
           .filter(function(key) { return availableHints[key] >= 0; });
 
-        if (list.length) {
-          var key = list[~~(Math.random() * list.length)];
+        // intentional off by 1 error to allow random 'hints' from time to time
+        var key = list[~~(Math.random() * (list.length + 1))];
 
+        if (key) {
           // when secret is revealed, give better hints about it
           if (list.length === 1 && key === 'start-over') {
             key = 'start-over-revealed';
           }
           hint = HINTS[key][availableHints[key]--];
         }
-      }
 
-      if (!hint) {
-        hint = decode("Zpv!lopx!bt!nvdi!bt!J!ep/");
+        if (!hint) {
+          var random = [
+            'Yes?',
+            'Anything else?',
+            'No lollygaggin.',
+            'Grumble, grumble...',
+            "Oh, it's you again.",
+            "I'm out of ideas...", // I really am... so I guess that's the last of random things Clippy will say
+            'Is this even a game?',
+            'view-source:' + window.location,
+            "Don't you have better things to do?",
+            'Just ask @bartaz, he made this thing.',
+            'It looks like you are trying to get a hint.',
+            'Paperclip walks into a bar.\n- Hard day at the office? - bartender asks.\n- Yeah, sheet got loose.',
+            'off-line: not connected to or served by a system and especially a computer or telecommunications system'
+          ]
+
+          if (data.hiScore === 0) {
+            random.push("Looks like your hi score is still 0. You need to start playing.");
+          }
+
+          if (data.hiScore < 42) {
+            random.push("Looks like your hi score is just " + data.hiScore + ". You can do better than that.");
+          }
+
+          if (data.hiScore >= 1337) {
+            random.push("l00x L1kE J00 R 4 1337.");
+          }
+
+          if (document.body.classList.contains('hiscore')) {
+            random.push("Looks like you can now share your hi score.");
+          }
+
+          if (data.achievements['start-over']) {
+            random.push("Looks like you started all over again, that's a dedication!");
+          }
+
+          if (data.achievements['click']) {
+            random.push("Looks like you clicked it at last. What an achievement!");
+          }
+
+          if (data.achievements['lucky']) {
+            random.push("Looks like you're the lucky one.");
+          }
+
+          if (data.achievements['cheater']) {
+            random.push("Looks like you know how to use the dev tools.");
+          }
+
+          hint = random[~~(Math.random() * random.length)];
+
+          if (lastHint === hint) {
+            hint = "Am I repeating myself?";
+          }
+
+          lastHint = hint;
+        }
+      } else {
+        // don't talk while playing
+        hint = "Shhh... Just play the game...";
       }
 
       console.log("📎 " + hint);
 
       // wrap URL hints in links
-      if (hint.indexOf('http') === 0) {
+      if (hint.indexOf('http') === 0 || hint.indexOf('view-source:') === 0) {
         hint = '<a href="' + hint + '" target="_blank">' + hint + '</a>';
       }
+
+      if (hint.indexOf('@bartaz') !== -1) {
+        hint = hint.replace('@bartaz', '<a href="https://twitter.com/bartaz" target="_blank">@bartaz</a>');
+      }
+
+      hint = hint.replace(/\n/g, '<br/>');
 
       bubbleEl.innerHTML = '<span>' + hint + '</span>';
       hintEl.classList.add('spoken');
@@ -622,7 +689,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       clearTimeout(hintTimeout);
       hintTimeout = setTimeout(function(){
         hintEl.classList.remove('spoken');
-      }, 10000);
+      }, navigator.onLine ? 10000 : 1000);
     }
 
     clippyEl.addEventListener('click', function(event) {
