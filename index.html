@@ -258,9 +258,15 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
   }
 
   function game() {
+    // DOM
     const bodyEl = document.body;
     const scoreEl = document.querySelector('#js-score');
+    const hiScoreEl = document.querySelector('#js-hiscore');
+    const unlockedEl = document.querySelector('#js-achievements');
+    const lockedEl = document.querySelector('#js-locked-achievements');
+    const hintEl = document.querySelector('.hint');
 
+    // GAME DATA
     function readGameData() {
       if (localStorage) {
         var gameData;
@@ -287,73 +293,35 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
     function getShareUrl(score) {
       var url = "https://twitter.com/share?url=" +
+        // TODO: https://js13kgames.com/entries/go-offline
         window.location +
-        "&text=I've just spent " + score + " seconds offline in Go Offline game, and first thing I'm doing is sharing it..." +
+        "&text=I've just spent " + score + " seconds offline in Go Offline game by @bartaz, and first thing I'm doing is sharing it online..." +
         "&hashtags=js13k,AchievementUnlocked"
 
       return url;
     }
 
-    var data = readGameData();
-    saveGameData(data);
+    // ACHIEVEMENTS
+    // ==============
 
-    document.querySelector('#js-hiscore').innerHTML = data.hiScore;
-
-    // INIT ACHIEVEMENTS
-    // ===================
-
-    const unlockedEl = document.querySelector('#js-achievements');
-    const lockedEl = document.querySelector('#js-locked-achievements');
+    // get list of achievements from DOM
     const achievementKeys = [].slice.call(document.querySelectorAll('.achievement'))
       .map(function(el) { return el.id.replace('js-achievement-', '') })
       .reverse();
 
     function renderUnlockedAchievement(key, isNew) {
-      document.querySelector('#js-achievement-' + key).classList.add('unlocked', isNew ? 'new' : '-');
-      document.querySelector('#js-achievement-' + key).classList.remove('secret');
-      document.body.insertBefore(document.querySelector('#js-achievement-' + key), unlockedEl.nextSibling);
+      const achievementEl = document.querySelector('#js-achievement-' + key);
+
+      achievementEl.classList.add('unlocked', isNew ? 'new' : '-');
+      achievementEl.classList.remove('secret');
+
+      bodyEl.insertBefore(achievementEl, unlockedEl.nextSibling);
       lockedEl.classList.remove('hidden');
 
-      // when all achievements where unlocked, hide 'locked' heading
+      // when all achievements were unlocked, hide 'locked' heading
       if (!lockedEl.nextElementSibling.classList.contains('achievement')) {
         lockedEl.classList.add('hidden');
       }
-    }
-
-    // "Now you're a Hero" by Reachground (reachground.se)
-    // from the game "You Have to Burn the Rope"
-    var SONG = [
-      "Congratulations!",
-      "You managed to beat the whole damn ga-ame…",
-      "We're happy you made it,",
-      "but how are you gonna spend the rest of this da-ay?",
-      "Maybe watch a video,",
-      "maybe press refresh and start again…",
-      "Now you're a hero!",
-      "You managed to beat the whole damn ga-ame…",
-      "We're happy you made it,",
-      "but how are you gonna spend the rest of this da-ay?",
-      "Maybe watch a video,",
-      "maybe press refresh and start again…",
-      "Yes it's over now.",
-      "We didn't want to make a longer game.",
-      "This is it,",
-      "I swear it's true…",
-      "ooh ohh"
-    ];
-
-    // adding HTML to song lines in 'post-production',
-    // so we can display it nicely in command line as well
-    function htmlifySongLine(line) {
-      if (line.indexOf('video') !== -1) {
-        line = line.replace('video', '<a href="https://youtu.be/VmuiwOGi5gA?t=52s" target="_blank">video</a>');
-      }
-
-      if (line.indexOf('refresh') !== -1) {
-        line = line.replace('refresh', '<a href="#reset">refresh</a>');
-      }
-
-      return line;
     }
 
     function renderAchievementsCount() {
@@ -364,6 +332,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
           achievementKeys.length +
         "]";
 
+      // if all achievements are unlocked, render congratulations song
       if (Object.keys(data.achievements).length === achievementKeys.length) {
         SONG
           .slice(0,6)
@@ -373,21 +342,10 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
             line = i ? line.charAt(0).toLowerCase() + line.slice(1) : line.toUpperCase();
 
             el.innerHTML = htmlifySongLine(line);
-            document.body.insertBefore(el, unlockedEl);
+            bodyEl.insertBefore(el, unlockedEl);
           });
       }
     }
-
-    // show unlocked achievements
-    Object.keys(data.achievements)
-      .filter(function(key) { return data.achievements[key]; })
-      .map(function(key, i, keys) {
-        // special case for start over to make sure it's marked as new after reload
-        var isNew = (key === 'start-over' && keys.length === 1);
-        return renderUnlockedAchievement(key, isNew);
-      });
-
-    renderAchievementsCount();
 
     // helper for unlocking achievements
     function unlockAchievement(key) {
@@ -397,7 +355,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
         player.src = soundURL;
         player.play();
 
-        // sound may not play on mobile without user intent, so let's try to vibrate instead
+        // sound may not play without user intent, so let's try to vibrate instead
         if ('ontouchstart' in document) {
           window.navigator.vibrate(200)
         }
@@ -409,76 +367,29 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       }
     }
 
-    // sharing is caring...
-    document.querySelector('#js-share').addEventListener('click', function() {
-      unlockAchievement('sharing');
-    });
-
-    // distraced...
-    document.addEventListener('visibilitychange', function() {
-      if (!document.hidden && !navigator.onLine) {
-        unlockAchievement('distracted');
-      }
-    });
-
-    // stayin' online...
-    var onlineTime = 0;
-    setInterval(function () {
-      if (!document.hidden && navigator.onLine) {
-        onlineTime++;
-        if (onlineTime > 42) {
-          unlockAchievement('online');
-        }
-      } else {
-        onlineTime = 0;
-      }
-    }, 1000);
-
-    // click me...
-    document.querySelector('#js-achievement-click').addEventListener('click', function(){
-      unlockAchievement('click');
-    });
-
-    // reset game to initial state
+    // reset game to (almost) initial state
     function startOver() {
       score = 0;
       scoreEl.innerHTML = score;
       data = readGameData();
       saveGameData(data);
-      document.querySelector('#js-hiscore').innerHTML = data.hiScore;
+      hiScoreEl.innerHTML = data.hiScore;
 
       achievementKeys.forEach(function (key) {
         document.querySelector('#js-achievement-' + key).classList.remove('unlocked', 'new');
-        document.body.insertBefore(document.querySelector('#js-achievement-' + key), lockedEl.nextSibling);
+        bodyEl.insertBefore(document.querySelector('#js-achievement-' + key), lockedEl.nextSibling);
       });
     }
 
-    setInterval(function() {
-      var storedData = localStorage.getItem('GO_OFFLINE_DATA');
-
-      if (storedData === null) {
-        // if game data in local storage was removed
-        // start over...
-        startOver();
-        unlockAchievement('start-over');
-      } else {
-        // otherwise if it was modified
-        // cheater...
-        if (JSON.stringify(data) !== storedData) {
-          saveGameData(data);
-          unlockAchievement('cheater');
-        }
-      }
-    }, 500);
+    // fully reset game data
+    function reset() {
+      data = null;
+      saveGameData(data);
+      window.location.reload();
+    }
 
     // GAME 'LOOP'
-
-    // if game loads in offline mode start it automatically
-    var offlineFirst = false;
-    if (!navigator.onLine) {
-      offlineFirst = true;
-      goOffline();
-    }
+    // ============
 
     var scoreTick; // interval for counting the score
 
@@ -545,18 +456,18 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
         unlockAchievement('lucky')
       }
 
-    	bodyEl.classList.remove('offline');
+      bodyEl.classList.remove('offline');
 
       // dealing with hi score
       if (score > data.hiScore) {
-        // hi!...
+        // hi...
         if (data.hiScore > 0) {
           unlockAchievement('hi');
         }
 
         data.hiScore = score;
         // show new hi score (and sharing link)
-        document.querySelector('#js-hiscore').innerHTML = score;
+        hiScoreEl.innerHTML = score;
         document.querySelector('#js-share').href = getShareUrl(score);
         bodyEl.classList.add('hiscore');
 
@@ -565,11 +476,8 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       window.clearInterval(scoreTick);
     }
 
-    window.addEventListener('offline', goOffline);
-    window.addEventListener('online', goOnline);
-
     // HINTS
-    console.log("📎 It looks like you are trying to figure out how this game works.\n📎 If you need any help, type: hint()");
+    // =======
 
     // sorry, as much as I like the idea of having the source open and readable
     // some things are meant to remain secret
@@ -598,19 +506,17 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       return hint.replace(/./g, function(c) { return String.fromCharCode(c.charCodeAt(0) - 1); });
     }
 
+    // init available hints counts and decode the hints
     Object.keys(HINTS).forEach(function(key) {
       availableHints[key] = HINTS[key].length - 1;
       HINTS[key] = HINTS[key].map(decode);
     });
 
-    var hintEl = document.querySelector('.hint');
-    var bubbleEl = document.querySelector('.bubble');
-    var clippyEl = document.querySelector('.clippy');
     var hintTimeout;
     var lastHint;
     var songVerse = 0;
 
-    window.hint = function hint() {
+    var hint = window.hint = function hint() {
       // just messin' with 'stayin online' achievement, so that getting hints
       // resets the timer to make it a bit harder to get
       onlineTime = 0
@@ -666,7 +572,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
             random.push("l00x L1kE J00 R 4 1337.");
           }
 
-          if (document.body.classList.contains('hiscore')) {
+          if (bodyEl.classList.contains('hiscore')) {
             random.push("Looks like you can now share your hi score.");
           }
 
@@ -716,7 +622,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
         hint = htmlifySongLine(hint);
       }
 
-      bubbleEl.innerHTML = '<span>' + hint + '</span>';
+      document.querySelector('.bubble').innerHTML = '<span>' + hint + '</span>';
       hintEl.classList.add('spoken');
 
       clearTimeout(hintTimeout);
@@ -725,21 +631,137 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       }, navigator.onLine ? 10000 : 1000);
     }
 
-    clippyEl.addEventListener('click', function(event) {
-      hint();
-      event.stopPropagation();
+    // "Now you're a Hero" by Reachground (reachground.se)
+    // from the game "You Have to Burn the Rope"
+    const SONG = [
+      "Congratulations!",
+      "You managed to beat the whole damn ga-ame…",
+      "We're happy you made it,",
+      "but how are you gonna spend the rest of this da-ay?",
+      "Maybe watch a video,",
+      "maybe press refresh and start again…",
+      "Now you're a hero!",
+      "You managed to beat the whole damn ga-ame…",
+      "We're happy you made it,",
+      "but how are you gonna spend the rest of this da-ay?",
+      "Maybe watch a video,",
+      "maybe press refresh and start again…",
+      "Yes it's over now.",
+      "We didn't want to make a longer game.",
+      "This is it,",
+      "I swear it's true…",
+      "ooh ohh"
+    ];
+
+    // helper for adding HTML to song lines in 'post-production',
+    // so we can display it nicely in command line as well
+    function htmlifySongLine(line) {
+      if (line.indexOf('video') !== -1) {
+        line = line.replace('video', '<a href="https://youtu.be/VmuiwOGi5gA?t=52s" target="_blank">video</a>');
+      }
+
+      if (line.indexOf('refresh') !== -1) {
+        line = line.replace('refresh', '<a href="#reset">refresh</a>');
+      }
+
+      return line;
+    }
+
+    // AND HERE IS WHERE THE GAME ACTUALLY STARTS, FINALLY!
+    // =====================================================
+
+    var data = readGameData();
+    saveGameData(data);
+
+    hiScoreEl.innerHTML = data.hiScore;
+
+    // show unlocked achievements
+    achievementKeys
+      .filter(function(key) { return data.achievements[key]; })
+      .map(function(key, i, keys) {
+        // special case for start over to make sure it's marked as new after reload
+        var isNew = (key === 'start-over' && keys.length === 1);
+        return renderUnlockedAchievement(key, isNew);
+      });
+
+    renderAchievementsCount();
+
+    // INIT ACHIEVEMENTS LISTENERS
+    // sharing is caring...
+    document.querySelector('#js-share').addEventListener('click', function() {
+      unlockAchievement('sharing');
     });
+
+    // distraced...
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden && !navigator.onLine) {
+        unlockAchievement('distracted');
+      }
+    });
+
+    // stayin' online...
+    var onlineTime = 0;
+    setInterval(function () {
+      if (!document.hidden && navigator.onLine) {
+        onlineTime++;
+        if (onlineTime > 42) {
+          unlockAchievement('online');
+        }
+      } else {
+        onlineTime = 0;
+      }
+    }, 1000);
+
+    // click me...
+    document.querySelector('#js-achievement-click').addEventListener('click', function(){
+      unlockAchievement('click');
+    });
+
+    // localStorage checker for 'cheater' and 'start over'
+    setInterval(function() {
+      var storedData = localStorage.getItem('GO_OFFLINE_DATA');
+
+      if (storedData === null) {
+        // if game data in local storage was removed
+        // start over...
+        startOver();
+        unlockAchievement('start-over');
+      } else {
+        // otherwise if it was modified
+        // cheater...
+        if (JSON.stringify(data) !== storedData) {
+          saveGameData(data);
+          unlockAchievement('cheater');
+        }
+      }
+    }, 500);
+
+    // if game loads in offline mode start it automatically
+    var offlineFirst = false;
+    if (!navigator.onLine) {
+      offlineFirst = true;
+      goOffline();
+    }
+
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+
+    // INIT HINTS
+    console.log("📎 It looks like you are trying to figure out how this game works.\n📎 If you need any help, type: hint()");
 
     document.addEventListener('click', function(event) {
       if (event.target.getAttribute('href') === '#reset') {
-        data = null;
-        saveGameData(data);
-        window.location.reload();
+        reset();
         event.preventDefault();
       }
 
-      clearTimeout(hintTimeout);
-      hintEl.classList.remove('spoken');
+      if (event.target.classList.contains('clippy')) {
+        hint();
+        event.stopPropagation();
+      } else {
+        clearTimeout(hintTimeout);
+        hintEl.classList.remove('spoken');
+      }
     });
   }
 
