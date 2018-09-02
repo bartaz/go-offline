@@ -133,6 +133,10 @@ h3 {
   cursor: pointer;
 }
 
+.clippy path {
+  pointer-events: none;
+}
+
 .offline .clippy {
   transform: translate(60px,60px) rotate(-30deg);
 }
@@ -284,7 +288,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
     function saveGameData(data) {
       if (localStorage) {
         try {
-          localStorage.setItem('GO_OFFLINE_DATA', JSON.stringify(data))
+          localStorage.setItem('GO_OFFLINE_DATA', JSON.stringify(data));
         } catch (e) {
           // silently ignore
         }
@@ -296,7 +300,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
         // TODO: https://js13kgames.com/entries/go-offline
         window.location +
         "&text=I've just spent " + score + " seconds offline in Go Offline game by @bartaz, and first thing I'm doing is sharing it online..." +
-        "&hashtags=js13k,AchievementUnlocked"
+        "&hashtags=js13k,AchievementUnlocked";
 
       return url;
     }
@@ -306,7 +310,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
     // get list of achievements from DOM
     const achievementKeys = [].slice.call(document.querySelectorAll('.achievement'))
-      .map(function(el) { return el.id.replace('js-achievement-', '') })
+      .map(function(el) { return el.id.replace('js-achievement-', ''); })
       .reverse();
 
     function renderUnlockedAchievement(key, isNew) {
@@ -350,14 +354,18 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
     // helper for unlocking achievements
     function unlockAchievement(key) {
       if (!data.achievements[key]) {
-        var soundURL = jsfxr([1,,0.0373,,0.2005,0.3599,,0.3733,,,,,,,,0.629,,,1,,,,,0.5]);
-        var player = new Audio();
-        player.src = soundURL;
-        player.play();
+        try {
+          var soundURL = jsfxr([1,,0.0373,,0.2005,0.3599,,0.3733,,,,,,,,0.629,,,1,,,,,0.5]);
+          var player = new Audio();
+          player.src = soundURL;
+          player.play().catch(function () { /* ignore sound promise errors */ });
+        } catch(e) {
+          // ignore sound errors
+        }
 
         // sound may not play without user intent, so let's try to vibrate instead
-        if ('ontouchstart' in document) {
-          window.navigator.vibrate(200)
+        if ('ontouchstart' in document && 'vibrate' in navigator) {
+          navigator.vibrate(200);
         }
 
         data.achievements[key] = true;
@@ -446,14 +454,14 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
             unlockAchievement('13-13-13');
           }
         }
-      }, 1000)
+      }, 1000);
     }
 
     // game over :(
     function goOnline() {
       // get lucky...
       if (!~~(Math.random() * 13)) {
-        unlockAchievement('lucky')
+        unlockAchievement('lucky');
       }
 
       bodyEl.classList.remove('offline');
@@ -500,7 +508,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       "start-over-revealed":["mpdbmTupsbhf/sfnpwfJufn)(HP`PGGMJOF`EBUB(*<","Sfnpwf!bmm!zpvs!qsphsftt!gspn!mpdbmTupsbhf/","Zpv!offe!up!hfu!sje!pg!bmm!zpvs!tbwfe!hbnf!ebub/","J!lopx!zpvs!qsphsftt!jt!qsfdjpvt-!cvu!xiz!opu!tubsujoh!gspn!tdsbudi@"]
     };
 
-    var availableHints = {}
+    var availableHints = {};
 
     function decode(hint) {
       return hint.replace(/./g, function(c) { return String.fromCharCode(c.charCodeAt(0) - 1); });
@@ -519,7 +527,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
     var hint = window.hint = function hint() {
       // just messin' with 'stayin online' achievement, so that getting hints
       // resets the timer to make it a bit harder to get
-      onlineTime = 0
+      onlineTime = 0;
 
       var hint;
 
@@ -558,7 +566,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
             'It looks like you are trying to get a hint.',
             'Paperclip walks into a bar.\n- Hard day at the office? - bartender asks.\n- Yeah, sheet got loose.',
             'off-line: not connected to or served by a system and especially a computer or telecommunications system'
-          ]
+          ];
 
           if (data.hiScore === 0) {
             random.push("Looks like your hi score is still 0. You need to start playing.");
@@ -629,7 +637,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       hintTimeout = setTimeout(function(){
         hintEl.classList.remove('spoken');
       }, navigator.onLine ? 10000 : 1000);
-    }
+    };
 
     // "Now you're a Hero" by Reachground (reachground.se)
     // from the game "You Have to Burn the Rope"
