@@ -457,11 +457,16 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       }, 1000);
     }
 
+    var lucky = 13;
+
     // game over :(
     function goOnline() {
       // get lucky...
-      if (!~~(Math.random() * 13)) {
+      if (!~~(Math.random() * lucky)) {
         unlockAchievement('lucky');
+      } else if (lucky > 2) {
+        // making sure probablility gets highier with each try, up to 50%
+        lucky--;
       }
 
       bodyEl.classList.remove('offline');
