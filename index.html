@@ -320,6 +320,42 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       }
     }
 
+    // "Now you're a Hero" by Reachground (reachground.se)
+    // from the game "You Have to Burn the Rope"
+    var SONG = [
+      "Congratulations!",
+      "You managed to beat the whole damn ga-ame…",
+      "We're happy you made it,",
+      "but how are you gonna spend the rest of this da-ay?",
+      "Maybe watch a video,",
+      "maybe press refresh and start again…",
+      "Now you're a hero!",
+      "You managed to beat the whole damn ga-ame…",
+      "We're happy you made it,",
+      "but how are you gonna spend the rest of this da-ay?",
+      "Maybe watch a video,",
+      "maybe press refresh and start again…",
+      "Yes it's over now.",
+      "We didn't want to make a longer game.",
+      "This is it,",
+      "I swear it's true…",
+      "ooh ohh"
+    ];
+
+    // adding HTML to song lines in 'post-production',
+    // so we can display it nicely in command line as well
+    function htmlifySongLine(line) {
+      if (line.indexOf('video') !== -1) {
+        line = line.replace('video', '<a href="https://youtu.be/VmuiwOGi5gA?t=52s" target="_blank">video</a>');
+      }
+
+      if (line.indexOf('refresh') !== -1) {
+        line = line.replace('refresh', '<a href="#reset">refresh</a>');
+      }
+
+      return line;
+    }
+
     function renderAchievementsCount() {
       document.querySelector('#js-achievements-count').innerHTML =
         "[" +
@@ -329,26 +365,16 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
         "]";
 
       if (Object.keys(data.achievements).length === achievementKeys.length) {
-        [
-          "CONGRATULATIONS",
-          "you managed to beat the whole damn ga-ame…",
-          "we're happy you made it,",
-          "but how are you gonna spend the rest of this da-ay?",
-          "maybe watch a <a href='https://youtu.be/VmuiwOGi5gA?t=52s' target='_blank'>video</a>,",
-          "maybe press refresh and <a href=\"#\" id='js-reset'>start again</a>…",
-        ]
+        SONG
+          .slice(0,6)
           .forEach(function(line, i) {
             var el = document.createElement(i ? 'p' : 'h3');
-            el.innerHTML = line;
+
+            line = i ? line.charAt(0).toLowerCase() + line.slice(1) : line.toUpperCase();
+
+            el.innerHTML = htmlifySongLine(line);
             document.body.insertBefore(el, unlockedEl);
           });
-
-        document.querySelector('#js-reset').addEventListener('click', function(event) {
-          data = null;
-          saveGameData(data);
-          window.location.reload();
-          event.preventDefault();
-        });
       }
     }
 
@@ -582,6 +608,7 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
     var clippyEl = document.querySelector('.clippy');
     var hintTimeout;
     var lastHint;
+    var songVerse = 0;
 
     window.hint = function hint() {
       // just messin' with 'stayin online' achievement, so that getting hints
@@ -590,7 +617,9 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
       var hint;
 
-      if (navigator.onLine) {
+      if (Object.keys(data.achievements).length === achievementKeys.length) {
+        hint = '♫ ' + SONG[songVerse++ % SONG.length] + ' ♫';
+      } else if (navigator.onLine) {
         // if 'go offline' is not unlocked yet hint only about that
         // or find a random locked achievement that still has hints available
         var list = (!data.achievements['go-offline'] ? ['go-offline'] : achievementKeys)
@@ -683,6 +712,10 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
 
       hint = hint.replace(/\n/g, '<br/>');
 
+      if (Object.keys(data.achievements).length === achievementKeys.length) {
+        hint = htmlifySongLine(hint);
+      }
+
       bubbleEl.innerHTML = '<span>' + hint + '</span>';
       hintEl.classList.add('spoken');
 
@@ -697,7 +730,14 @@ function SfxrParams(){this.setSettings=function(r){for(var a=0;a<24;a++)this[Str
       event.stopPropagation();
     });
 
-    document.addEventListener('click', function() {
+    document.addEventListener('click', function(event) {
+      if (event.target.getAttribute('href') === '#reset') {
+        data = null;
+        saveGameData(data);
+        window.location.reload();
+        event.preventDefault();
+      }
+
       clearTimeout(hintTimeout);
       hintEl.classList.remove('spoken');
     });
